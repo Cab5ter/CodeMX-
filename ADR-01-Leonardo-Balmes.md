@@ -3,7 +3,7 @@
 | Campo  | Valor |
 |--------|-------|
 | Autor  |Leonardo Balmes Solis|
-| Fecha  | DD/MM/AAAA |
+| Fecha  |15/05/2026|
 | Estado | `Propuesto` · `Aceptado` · `Rechazado` · `Reemplazado por ADR-NN` |
 
 ---
