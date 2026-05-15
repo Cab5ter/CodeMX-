@@ -149,4 +149,4 @@ esté caído.
 
 Un boceto de cómo se estructura tu sistema (draw.io, Mermaid o a mano escaneado)
 
-![Diagrama del sistema]( ./ruta/diagrama-nivel-1.png )
+![Diagrama](img/Untitled%20diagram-2026-05-15-231326.png)
