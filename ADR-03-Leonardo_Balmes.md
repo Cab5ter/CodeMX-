@@ -1,4 +1,4 @@
-# ADR-02: Estilo arquitectónico de CodeMX
+# ADR-03: Estilo arquitectónico de CodeMX
 
 | Campo  | Valor |
 |--------|-------|
@@ -56,5 +56,4 @@ Al ser un único despliegue, conservo la simplicidad operativa de un monolito (u
 - **Deuda/riesgo:** las fronteras entre módulos hay que **mantenerlas con disciplina**; sin revisión, es fácil que un módulo empiece a depender de los detalles internos de otro y se erosione la modularidad, regresando de facto a un monolito acoplado. Si el proyecto creciera mucho, tocaría extraer los módulos más exigidos a microservicios.
 
 ## Diagrama
-
-![Diagrama del estilo arquitectónico de CodeMX](./diagrama-codemx.png)
+![Diagrama del estilo arquitectónico de CodeMX](./img/diagrama-codemx.png)
