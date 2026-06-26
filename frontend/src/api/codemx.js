@@ -13,6 +13,12 @@ export async function getRetoById(id) {
   return res.json()
 }
 
+export async function getEjemploReto(id) {
+  const res = await fetch(`${BASE}/retos/${id}/ejemplo`)
+  if (!res.ok) return null
+  return res.json()
+}
+
 export async function getRanking() {
   const res = await fetch(`${BASE}/ranking`)
   if (!res.ok) throw new Error('Error al cargar ranking')

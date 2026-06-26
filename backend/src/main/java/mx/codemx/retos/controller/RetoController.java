@@ -1,5 +1,6 @@
 package mx.codemx.retos.controller;
 
+import mx.codemx.retos.model.CasoPrueba;
 import mx.codemx.retos.model.Dificultad;
 import mx.codemx.retos.model.Reto;
 import mx.codemx.retos.service.RetoService;
@@ -19,17 +20,21 @@ public class RetoController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Reto>> listar(
-            @RequestParam(required = false) Dificultad dificultad) {
-        if (dificultad != null) {
-            return ResponseEntity.ok(retoService.listarPorDificultad(dificultad));
-        }
+    public ResponseEntity<List<Reto>> listar(@RequestParam(required = false) Dificultad dificultad) {
+        if (dificultad != null) return ResponseEntity.ok(retoService.listarPorDificultad(dificultad));
         return ResponseEntity.ok(retoService.listarTodos());
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<Reto> obtener(@PathVariable Long id) {
         return retoService.buscarPorId(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/{id}/ejemplo")
+    public ResponseEntity<CasoPrueba> obtenerEjemplo(@PathVariable Long id) {
+        return retoService.obtenerEjemplo(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }

@@ -2,6 +2,13 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { registrarUsuario } from '../api/codemx'
 
+const BENEFICIOS = [
+  { icono: '🎯', texto: '8 retos de programación en español' },
+  { icono: '📈', texto: 'Seguimiento de tu progreso en el ranking' },
+  { icono: '⚡', texto: 'Evaluación automática de tu código' },
+  { icono: '🏆', texto: 'Puntos según la dificultad del reto' },
+]
+
 export default function Registro() {
   const [form, setForm] = useState({ nombre: '', email: '', passwordHash: '' })
   const [usuario, setUsuario] = useState(null)
@@ -29,85 +36,89 @@ export default function Registro() {
 
   if (usuario) {
     return (
-      <div className="max-w-md mx-auto text-center">
-        <div className="bg-emerald-900 border border-emerald-600 rounded-lg p-8">
-          <p className="text-emerald-300 text-xl font-bold mb-2">¡Cuenta creada!</p>
-          <p className="text-gray-300">Bienvenido, <span className="font-semibold">{usuario.nombre}</span></p>
-          <div className="mt-4 bg-gray-900 rounded-lg p-3 inline-block">
-            <p className="text-gray-500 text-xs">Tu ID de usuario</p>
-            <p className="text-emerald-400 font-mono font-bold text-2xl">#{usuario.id}</p>
-          </div>
-          <p className="text-gray-500 text-xs mt-4">
-            Guarda este número — lo usarás para enviar soluciones.
-          </p>
-          <Link
-            to="/"
-            className="mt-6 inline-block bg-emerald-600 hover:bg-emerald-500 text-white font-semibold px-6 py-2.5 rounded-lg transition-colors"
-          >
-            Ver retos →
-          </Link>
+      <div className="max-w-md mx-auto text-center pt-8">
+        <div className="text-6xl mb-4">🎉</div>
+        <h2 className="text-2xl font-bold text-white mb-2">¡Bienvenido, {usuario.nombre}!</h2>
+        <p className="text-gray-400 mb-6">Tu cuenta ha sido creada exitosamente.</p>
+
+        <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 mb-6">
+          <p className="text-gray-500 text-sm mb-1">Tu ID de usuario</p>
+          <p className="font-mono text-4xl font-bold text-emerald-400">#{usuario.id}</p>
+          <p className="text-gray-600 text-xs mt-2">Guarda este número — lo necesitas para enviar soluciones</p>
         </div>
+
+        <Link
+          to="/"
+          className="inline-block bg-emerald-600 hover:bg-emerald-500 text-white font-semibold px-8 py-3 rounded-xl transition-colors"
+        >
+          Ir a los retos →
+        </Link>
       </div>
     )
   }
 
   return (
-    <div className="max-w-md mx-auto">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-100">Crear cuenta</h1>
-        <p className="text-gray-400 mt-1">Únete a CodeMX y empieza a resolver retos</p>
+    <div className="grid lg:grid-cols-2 gap-12 items-start pt-4">
+      {/* Lado izquierdo */}
+      <div>
+        <div className="flex items-center gap-2 mb-4">
+          <span className="h-px w-8 bg-emerald-500" />
+          <span className="text-emerald-400 text-sm font-medium tracking-wide uppercase">Gratis</span>
+        </div>
+        <h1 className="text-3xl font-bold text-white mb-3 leading-snug">
+          Únete a <span className="bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">CodeMX</span>
+        </h1>
+        <p className="text-gray-400 mb-8">
+          La plataforma de retos de programación en español para estudiantes universitarios de México.
+        </p>
+
+        <div className="space-y-4">
+          {BENEFICIOS.map(b => (
+            <div key={b.texto} className="flex items-center gap-3">
+              <span className="text-xl w-8 text-center">{b.icono}</span>
+              <span className="text-gray-300 text-sm">{b.texto}</span>
+            </div>
+          ))}
+        </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="bg-gray-800 rounded-lg border border-gray-700 p-6 flex flex-col gap-4">
-        <div>
-          <label className="text-gray-400 text-sm block mb-1">Nombre completo</label>
-          <input
-            type="text"
-            name="nombre"
-            value={form.nombre}
-            onChange={handleChange}
-            required
-            className="w-full bg-gray-900 border border-gray-700 rounded px-3 py-2 text-gray-200 text-sm outline-none focus:border-emerald-500 transition-colors"
-            placeholder="Tu nombre"
-          />
-        </div>
+      {/* Formulario */}
+      <div className="bg-gray-900 border border-gray-800 rounded-2xl p-7">
+        <h2 className="text-lg font-semibold text-white mb-5">Crear cuenta</h2>
 
-        <div>
-          <label className="text-gray-400 text-sm block mb-1">Correo electrónico</label>
-          <input
-            type="email"
-            name="email"
-            value={form.email}
-            onChange={handleChange}
-            required
-            className="w-full bg-gray-900 border border-gray-700 rounded px-3 py-2 text-gray-200 text-sm outline-none focus:border-emerald-500 transition-colors"
-            placeholder="tu@correo.com"
-          />
-        </div>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {[
+            { name: 'nombre',       label: 'Nombre completo', type: 'text',     placeholder: 'Tu nombre' },
+            { name: 'email',        label: 'Correo electrónico', type: 'email', placeholder: 'tu@correo.com' },
+            { name: 'passwordHash', label: 'Contraseña',      type: 'password', placeholder: '••••••••' },
+          ].map(field => (
+            <div key={field.name}>
+              <label className="text-gray-400 text-xs font-medium block mb-1.5 uppercase tracking-wide">
+                {field.label}
+              </label>
+              <input
+                type={field.type}
+                name={field.name}
+                value={form[field.name]}
+                onChange={handleChange}
+                required
+                className="w-full bg-gray-950 border border-gray-800 focus:border-emerald-500 rounded-lg px-4 py-2.5 text-gray-200 text-sm outline-none transition-colors"
+                placeholder={field.placeholder}
+              />
+            </div>
+          ))}
 
-        <div>
-          <label className="text-gray-400 text-sm block mb-1">Contraseña</label>
-          <input
-            type="password"
-            name="passwordHash"
-            value={form.passwordHash}
-            onChange={handleChange}
-            required
-            className="w-full bg-gray-900 border border-gray-700 rounded px-3 py-2 text-gray-200 text-sm outline-none focus:border-emerald-500 transition-colors"
-            placeholder="••••••••"
-          />
-        </div>
+          {error && <p className="text-red-400 text-sm">{error}</p>}
 
-        {error && <p className="text-red-400 text-sm">{error}</p>}
-
-        <button
-          type="submit"
-          disabled={cargando}
-          className="bg-emerald-600 hover:bg-emerald-500 disabled:bg-gray-700 disabled:text-gray-500 text-white font-semibold py-2.5 rounded-lg transition-colors mt-2"
-        >
-          {cargando ? 'Creando cuenta...' : 'Crear cuenta'}
-        </button>
-      </form>
+          <button
+            type="submit"
+            disabled={cargando}
+            className="w-full bg-emerald-600 hover:bg-emerald-500 disabled:bg-gray-800 disabled:text-gray-600 text-white font-semibold py-3 rounded-xl transition-colors mt-2"
+          >
+            {cargando ? 'Creando cuenta...' : 'Crear cuenta'}
+          </button>
+        </form>
+      </div>
     </div>
   )
 }

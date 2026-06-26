@@ -2,62 +2,88 @@ import { useState, useEffect } from 'react'
 import RetoCard from '../components/RetoCard'
 import { getRetos } from '../api/codemx'
 
-const FILTROS = [null, 'BASICO', 'INTERMEDIO', 'AVANZADO']
-const FILTRO_LABEL = { null: 'Todos', BASICO: 'Básico', INTERMEDIO: 'Intermedio', AVANZADO: 'Avanzado' }
+const FILTROS = [
+  { value: null,         label: 'Todos',       color: 'text-gray-300'    },
+  { value: 'BASICO',     label: 'Básico',       color: 'text-emerald-400' },
+  { value: 'INTERMEDIO', label: 'Intermedio',   color: 'text-amber-400'   },
+  { value: 'AVANZADO',   label: 'Avanzado',     color: 'text-red-400'     },
+]
+
+const STATS = [
+  { valor: '8',     label: 'Retos disponibles' },
+  { valor: '3',     label: 'Niveles de dificultad' },
+  { valor: '100%',  label: 'En español' },
+]
 
 export default function Inicio() {
   const [retos, setRetos] = useState([])
   const [filtro, setFiltro] = useState(null)
   const [cargando, setCargando] = useState(true)
-  const [error, setError] = useState(null)
 
   useEffect(() => {
     setCargando(true)
-    setError(null)
     getRetos(filtro)
       .then(setRetos)
-      .catch(e => setError(e.message))
       .finally(() => setCargando(false))
   }, [filtro])
 
   return (
     <div>
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-100">Retos de Programación</h1>
-        <p className="text-gray-400 mt-1">Practica y mejora tus habilidades con retos en español</p>
+      {/* Hero */}
+      <div className="mb-10 py-8 border-b border-gray-800">
+        <div className="flex items-center gap-2 mb-3">
+          <span className="h-px w-8 bg-emerald-500" />
+          <span className="text-emerald-400 text-sm font-medium tracking-wide uppercase">Plataforma educativa</span>
+        </div>
+        <h1 className="text-4xl font-bold text-white mb-3 leading-tight">
+          Aprende a programar<br />
+          <span className="bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
+            resolviendo retos
+          </span>
+        </h1>
+        <p className="text-gray-400 text-lg max-w-xl">
+          Retos de programación en español, ordenados por dificultad y diseñados para estudiantes universitarios mexicanos.
+        </p>
+
+        {/* Stats */}
+        <div className="flex gap-8 mt-6">
+          {STATS.map(s => (
+            <div key={s.label}>
+              <div className="text-2xl font-bold text-white">{s.valor}</div>
+              <div className="text-xs text-gray-500 mt-0.5">{s.label}</div>
+            </div>
+          ))}
+        </div>
       </div>
 
-      <div className="flex gap-2 mb-6 flex-wrap">
+      {/* Filtros */}
+      <div className="flex items-center gap-2 mb-5">
+        <span className="text-gray-500 text-sm mr-1">Filtrar:</span>
         {FILTROS.map(f => (
           <button
-            key={String(f)}
-            onClick={() => setFiltro(f)}
-            className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
-              filtro === f
-                ? 'bg-emerald-600 text-white'
-                : 'bg-gray-800 text-gray-400 hover:text-white border border-gray-700'
+            key={String(f.value)}
+            onClick={() => setFiltro(f.value)}
+            className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all border ${
+              filtro === f.value
+                ? 'bg-gray-800 border-gray-600 ' + f.color
+                : 'border-transparent text-gray-500 hover:text-gray-300 hover:bg-gray-900'
             }`}
           >
-            {FILTRO_LABEL[f]}
+            {f.label}
           </button>
         ))}
       </div>
 
-      {cargando && (
-        <div className="flex flex-col gap-3">
-          {[1, 2, 3].map(i => (
-            <div key={i} className="bg-gray-800 rounded-lg p-5 border border-gray-700 animate-pulse h-20" />
+      {/* Lista */}
+      {cargando ? (
+        <div className="space-y-3">
+          {[1, 2, 3, 4].map(i => (
+            <div key={i} className="h-[72px] bg-gray-900 rounded-lg border border-gray-800 animate-pulse" />
           ))}
         </div>
-      )}
-
-      {error && <p className="text-red-400">{error}</p>}
-
-      {!cargando && !error && (
-        <div className="flex flex-col gap-3">
-          {retos.map(reto => (
-            <RetoCard key={reto.id} reto={reto} />
-          ))}
+      ) : (
+        <div className="space-y-2">
+          {retos.map(reto => <RetoCard key={reto.id} reto={reto} />)}
         </div>
       )}
     </div>
