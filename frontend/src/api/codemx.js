@@ -45,3 +45,51 @@ export async function enviarSolucion({ usuarioId, retoId, codigoFuente }) {
   if (!res.ok) throw new Error('Error al enviar solución')
   return res.json()
 }
+
+// ---------- Módulo Cursos (aprendizaje) ----------
+
+function usuarioParam(usuarioId) {
+  return usuarioId ? `?usuarioId=${usuarioId}` : ''
+}
+
+export async function getModulos(usuarioId) {
+  const res = await fetch(`${BASE}/cursos${usuarioParam(usuarioId)}`)
+  if (!res.ok) throw new Error('Error al cargar los cursos')
+  return res.json()
+}
+
+export async function getModulo(moduloId, usuarioId) {
+  const res = await fetch(`${BASE}/cursos/modulos/${moduloId}${usuarioParam(usuarioId)}`)
+  if (!res.ok) throw new Error('Módulo no encontrado')
+  return res.json()
+}
+
+export async function getLeccion(leccionId, usuarioId) {
+  const res = await fetch(`${BASE}/cursos/lecciones/${leccionId}${usuarioParam(usuarioId)}`)
+  if (!res.ok) throw new Error('Lección no encontrada')
+  return res.json()
+}
+
+export async function completarLeccion(leccionId, usuarioId) {
+  const res = await fetch(`${BASE}/cursos/lecciones/${leccionId}/completar?usuarioId=${usuarioId}`, {
+    method: 'POST'
+  })
+  if (!res.ok) throw new Error('No se pudo marcar la lección')
+}
+
+export async function getExamen(moduloId, usuarioId) {
+  const res = await fetch(`${BASE}/cursos/modulos/${moduloId}/examen?usuarioId=${usuarioId}`)
+  if (res.status === 403) throw new Error('BLOQUEADO')
+  if (!res.ok) throw new Error('No se pudo cargar el examen')
+  return res.json()
+}
+
+export async function enviarExamen(moduloId, usuarioId, respuestas) {
+  const res = await fetch(`${BASE}/cursos/modulos/${moduloId}/examen?usuarioId=${usuarioId}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(respuestas)
+  })
+  if (!res.ok) throw new Error('No se pudo calificar el examen')
+  return res.json()
+}
