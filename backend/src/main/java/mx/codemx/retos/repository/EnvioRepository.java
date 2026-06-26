@@ -1,7 +1,7 @@
-package mx.codemx.envios.repository;
+package mx.codemx.retos.repository;
 
-import mx.codemx.envios.model.Envio;
-import mx.codemx.envios.model.Veredicto;
+import mx.codemx.retos.model.Envio;
+import mx.codemx.retos.model.Veredicto;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

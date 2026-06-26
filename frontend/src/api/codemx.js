@@ -36,10 +36,11 @@ export async function registrarUsuario(datos) {
 }
 
 export async function enviarSolucion({ usuarioId, retoId, codigoFuente }) {
-  const res = await fetch(`${BASE}/envios`, {
+  // Vista de Procesos (ADR-02): el envío entra por el módulo Retos.
+  const res = await fetch(`${BASE}/retos/${retoId}/submit`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ usuarioId, retoId, codigoFuente })
+    body: JSON.stringify({ usuarioId, codigoFuente })
   })
   if (!res.ok) throw new Error('Error al enviar solución')
   return res.json()

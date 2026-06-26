@@ -1,7 +1,7 @@
-package mx.codemx.usuarios.service;
+package mx.codemx.autenticacion.service;
 
-import mx.codemx.usuarios.model.Usuario;
-import mx.codemx.usuarios.repository.UsuarioRepository;
+import mx.codemx.autenticacion.model.Usuario;
+import mx.codemx.autenticacion.repository.UsuarioRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

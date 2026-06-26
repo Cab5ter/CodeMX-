@@ -1,4 +1,4 @@
-package mx.codemx.usuarios.model;
+package mx.codemx.autenticacion.model;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;

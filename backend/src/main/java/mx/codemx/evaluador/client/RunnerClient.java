@@ -1,13 +1,12 @@
-package mx.codemx.evaluacion.client;
+package mx.codemx.evaluador.client;
 
-import mx.codemx.evaluacion.model.ResultadoEvaluacion;
+import mx.codemx.evaluador.model.ResultadoEvaluacion;
+import mx.codemx.evaluador.model.SolicitudEvaluacion;
 import mx.codemx.retos.model.CasoPrueba;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
-
-import mx.codemx.evaluacion.model.SolicitudEvaluacion;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -17,27 +16,40 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * Cliente del módulo Evaluador hacia el servicio externo "Runner de código" (Python).
+ *
+ * Según la Vista de Procesos del ADR-02, este componente es el único que se comunica
+ * con el servicio Python vía HTTP interno (localhost). La llamada usa un timeout explícito
+ * (evaluador.timeout-ms) para no bloquear al backend si el runner se cuelga.
+ *
+ * Mientras el servicio Python no esté disponible, cae a una ejecución local con ProcessBuilder
+ * que respeta el mismo timeout.
+ */
 @Component
-public class EvaluadorClient {
+public class RunnerClient {
 
     private final RestTemplate restTemplate;
 
     @Value("${evaluador.url}")
     private String evaluadorUrl;
 
-    public EvaluadorClient(RestTemplate restTemplate) {
+    @Value("${evaluador.timeout-ms}")
+    private long timeoutMs;
+
+    public RunnerClient(RestTemplate restTemplate) {
         this.restTemplate = restTemplate;
     }
 
-    public ResultadoEvaluacion evaluar(SolicitudEvaluacion solicitud, List<CasoPrueba> casos) {
+    public ResultadoEvaluacion ejecutar(SolicitudEvaluacion solicitud, List<CasoPrueba> casos) {
         try {
             return restTemplate.postForObject(evaluadorUrl + "/evaluar", solicitud, ResultadoEvaluacion.class);
         } catch (RestClientException e) {
-            return evaluarConPython(solicitud.codigoFuente(), casos);
+            return ejecutarLocalmente(solicitud.codigoFuente(), casos);
         }
     }
 
-    private ResultadoEvaluacion evaluarConPython(String codigo, List<CasoPrueba> casos) {
+    private ResultadoEvaluacion ejecutarLocalmente(String codigo, List<CasoPrueba> casos) {
         if (casos.isEmpty()) {
             return new ResultadoEvaluacion("ERROR_EN_EJECUCION", "El reto no tiene casos de prueba configurados", 0L);
         }
@@ -58,7 +70,7 @@ public class EvaluadorClient {
             } catch (RuntimeException e) {
                 String msg = e.getMessage();
                 if (msg != null && msg.startsWith("TLE")) {
-                    return new ResultadoEvaluacion("TIEMPO_LIMITE_EXCEDIDO", null, 5000L);
+                    return new ResultadoEvaluacion("TIEMPO_LIMITE_EXCEDIDO", null, timeoutMs);
                 }
                 String detalle = msg != null && msg.startsWith("RTE:") ? msg.substring(4) : msg;
                 return new ResultadoEvaluacion("ERROR_EN_EJECUCION", detalle, System.currentTimeMillis() - inicio);
@@ -96,7 +108,7 @@ public class EvaluadorClient {
             stdoutReader.start();
             stderrReader.start();
 
-            boolean terminado = proc.waitFor(5, TimeUnit.SECONDS);
+            boolean terminado = proc.waitFor(timeoutMs, TimeUnit.MILLISECONDS);
             stdoutReader.join(500);
             stderrReader.join(500);
 

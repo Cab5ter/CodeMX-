@@ -2,7 +2,10 @@ package mx.codemx.retos.controller;
 
 import mx.codemx.retos.model.CasoPrueba;
 import mx.codemx.retos.model.Dificultad;
+import mx.codemx.retos.model.Envio;
+import mx.codemx.retos.model.EnvioRequest;
 import mx.codemx.retos.model.Reto;
+import mx.codemx.retos.service.EnvioService;
 import mx.codemx.retos.service.RetoService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -14,9 +17,11 @@ import java.util.List;
 public class RetoController {
 
     private final RetoService retoService;
+    private final EnvioService envioService;
 
-    public RetoController(RetoService retoService) {
+    public RetoController(RetoService retoService, EnvioService envioService) {
         this.retoService = retoService;
+        this.envioService = envioService;
     }
 
     @GetMapping
@@ -37,6 +42,30 @@ public class RetoController {
         return retoService.obtenerEjemplo(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    /**
+     * Punto de entrada del flujo de la Vista de Procesos (ADR-02):
+     * el estudiante envía su solución a un reto. El módulo Retos guarda el envío,
+     * lo manda al Evaluador y devuelve el veredicto (AC / WA / TLE).
+     */
+    @PostMapping("/{id}/submit")
+    public ResponseEntity<Envio> submit(@PathVariable Long id, @RequestBody EnvioRequest req) {
+        Envio envio = new Envio();
+        envio.setRetoId(id);
+        envio.setUsuarioId(req.usuarioId());
+        envio.setCodigoFuente(req.codigoFuente());
+        return ResponseEntity.ok(envioService.enviar(envio));
+    }
+
+    @GetMapping("/{id}/envios")
+    public ResponseEntity<List<Envio>> enviosPorReto(@PathVariable Long id) {
+        return ResponseEntity.ok(envioService.listarPorReto(id));
+    }
+
+    @GetMapping("/envios/usuario/{usuarioId}")
+    public ResponseEntity<List<Envio>> enviosPorUsuario(@PathVariable Long usuarioId) {
+        return ResponseEntity.ok(envioService.listarPorUsuario(usuarioId));
     }
 
     @PostMapping

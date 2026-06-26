@@ -1,6 +1,6 @@
-package mx.codemx.usuarios.repository;
+package mx.codemx.autenticacion.repository;
 
-import mx.codemx.usuarios.model.Usuario;
+import mx.codemx.autenticacion.model.Usuario;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

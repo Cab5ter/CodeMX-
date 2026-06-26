@@ -18,5 +18,10 @@ spring:
 server:
   port: 8080
 
+# Servicio externo de evaluación (Runner de código en Python).
+# Vista Física (ADR-02): el backend lo invoca por localhost en el mismo servidor.
+# El timeout es explícito porque la Vista de Procesos lo identificó como punto de falla:
+# si el runner se cuelga, la llamada se corta para no bloquear al backend.
 evaluador:
   url: ${EVALUADOR_URL:http://localhost:8000}
+  timeout-ms: ${EVALUADOR_TIMEOUT_MS:5000}

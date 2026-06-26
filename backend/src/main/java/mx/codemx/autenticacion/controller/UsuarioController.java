@@ -1,7 +1,7 @@
-package mx.codemx.usuarios.controller;
+package mx.codemx.autenticacion.controller;
 
-import mx.codemx.usuarios.model.Usuario;
-import mx.codemx.usuarios.service.UsuarioService;
+import mx.codemx.autenticacion.model.Usuario;
+import mx.codemx.autenticacion.service.UsuarioService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 

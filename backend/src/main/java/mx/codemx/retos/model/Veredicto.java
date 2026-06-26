@@ -1,4 +1,4 @@
-package mx.codemx.envios.model;
+package mx.codemx.retos.model;
 
 public enum Veredicto {
     PENDIENTE,

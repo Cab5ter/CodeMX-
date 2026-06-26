@@ -1,4 +1,4 @@
-package mx.codemx.envios.model;
+package mx.codemx.retos.model;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
