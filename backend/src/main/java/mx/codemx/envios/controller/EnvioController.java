@@ -19,7 +19,7 @@ public class EnvioController {
 
     @PostMapping
     public ResponseEntity<Envio> enviar(@RequestBody Envio envio) {
-        return ResponseEntity.ok(envioService.guardar(envio));
+        return ResponseEntity.ok(envioService.enviar(envio));
     }
 
     @GetMapping("/{id}")
