@@ -1,52 +1,55 @@
-package mx.codemx.retos.controller;
+package mx.codemx.gateway;
 
+import mx.codemx.retos.api.RetosApi;
 import mx.codemx.retos.model.CasoPrueba;
 import mx.codemx.retos.model.Dificultad;
 import mx.codemx.retos.model.Reto;
-import mx.codemx.retos.service.RetoService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * Gateway interno → módulo Retos.
+ */
 @RestController
 @RequestMapping("/api/retos")
 public class RetoController {
 
-    private final RetoService retoService;
+    private final RetosApi retos;
 
-    public RetoController(RetoService retoService) {
-        this.retoService = retoService;
+    public RetoController(RetosApi retos) {
+        this.retos = retos;
     }
 
     @GetMapping
     public ResponseEntity<List<Reto>> listar(@RequestParam(required = false) Dificultad dificultad) {
-        if (dificultad != null) return ResponseEntity.ok(retoService.listarPorDificultad(dificultad));
-        return ResponseEntity.ok(retoService.listarTodos());
+        if (dificultad != null) return ResponseEntity.ok(retos.listarPorDificultad(dificultad));
+        return ResponseEntity.ok(retos.listarTodos());
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<Reto> obtener(@PathVariable Long id) {
-        return retoService.buscarPorId(id)
+        return retos.buscarPorId(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/{id}/ejemplo")
     public ResponseEntity<CasoPrueba> obtenerEjemplo(@PathVariable Long id) {
-        return retoService.obtenerEjemplo(id)
+        return retos.obtenerEjemplo(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping
     public ResponseEntity<Reto> crear(@RequestBody Reto reto) {
-        return ResponseEntity.ok(retoService.guardar(reto));
+        return ResponseEntity.ok(retos.guardar(reto));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminar(@PathVariable Long id) {
-        retoService.eliminar(id);
+        retos.eliminar(id);
         return ResponseEntity.noContent().build();
     }
 }

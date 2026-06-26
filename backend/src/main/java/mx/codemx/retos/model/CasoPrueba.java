@@ -3,7 +3,7 @@ package mx.codemx.retos.model;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "casos_prueba")
+@Table(name = "casos_prueba", schema = "retos")
 public class CasoPrueba {
 
     @Id

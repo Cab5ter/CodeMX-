@@ -14,6 +14,10 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
+        # PostgreSQL es la única fuente de verdad, con un esquema lógico por módulo
+        # (usuarios, retos, envios, ranking). Hibernate crea los esquemas si no existen.
+        hbm2ddl:
+          create_namespaces: true
 
 server:
   port: 8080
