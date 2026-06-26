@@ -82,4 +82,9 @@ public class EnvioService implements EnviosApi {
     public List<Envio> listarPorReto(Long retoId) {
         return envioRepository.findByRetoId(retoId);
     }
+
+    @Override
+    public boolean tieneAceptado(Long usuarioId, Long retoId) {
+        return envioRepository.existsByUsuarioIdAndRetoIdAndVeredicto(usuarioId, retoId, Veredicto.ACEPTADO);
+    }
 }

@@ -22,4 +22,7 @@ public interface EnviosApi {
     List<Envio> listarPorUsuario(Long usuarioId);
 
     List<Envio> listarPorReto(Long retoId);
+
+    /** True si el usuario ya resolvió (ACEPTADO) ese reto. Lo usa el módulo Cursos. */
+    boolean tieneAceptado(Long usuarioId, Long retoId);
 }

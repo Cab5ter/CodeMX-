@@ -20,7 +20,8 @@ export default function Navbar() {
         </Link>
 
         <div className="flex items-center h-14">
-          <NavLink to="/" className={linkClass} end>Retos</NavLink>
+          <NavLink to="/" className={linkClass} end>Cursos</NavLink>
+          <NavLink to="/ejercicios" className={linkClass}>Ejercicios</NavLink>
           <NavLink to="/ranking" className={linkClass}>Ranking</NavLink>
           <NavLink to="/registro" className={linkClass}>Registro</NavLink>
         </div>
