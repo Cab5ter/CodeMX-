@@ -44,8 +44,13 @@ builder.Services.AddScoped<IRankingApi, RankingService>();
 builder.Services.AddScoped<IEvaluacionApi, EvaluacionService>();
 builder.Services.AddScoped<ICursosApi, CursoService>();
 
-// --- Cliente HTTP del módulo Evaluación hacia el Servicio Python ---
-builder.Services.AddHttpClient<RunnerClient>();
+// --- Patrón Strategy + Factory Method para el módulo Evaluación ---
+builder.Services.AddHttpClient<EvaluacionRemotaStrategy>();
+builder.Services.AddScoped<EvaluacionLocalStrategy>();
+builder.Services.AddScoped<IEvaluadorStrategyFactory, EvaluadorStrategyFactory>();
+
+// --- Patrón Observer: Ranking se suscribe a los envíos aceptados ---
+builder.Services.AddScoped<IEnvioObserver, RankingEnvioObserver>();
 
 // --- CORS para el frontend React (Vite) ---
 builder.Services.AddCors(o => o.AddDefaultPolicy(p =>

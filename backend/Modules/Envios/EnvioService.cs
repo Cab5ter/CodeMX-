@@ -1,27 +1,27 @@
 using CodeMX.Api.Modules.Evaluacion;
-using CodeMX.Api.Modules.Ranking;
 
 namespace CodeMX.Api.Modules.Envios;
 
 /// <summary>
-/// Implementación del módulo Envíos. Coordina el flujo de un envío (ADR-03/04):
+/// Implementación del módulo Envíos. Coordina el flujo de un envío:
 ///   1. Guarda el envío como PENDIENTE.
 ///   2. Pide la evaluación al módulo Evaluación (IEvaluacionApi).
 ///   3. Actualiza el veredicto.
-///   4. Si es el primer ACEPTADO del usuario en ese reto, notifica a Ranking (IRankingApi).
-/// Sólo conoce las interfaces de Evaluación y Ranking, no sus internals.
+///   4. Si es el primer ACEPTADO del usuario en ese reto, <b>publica el evento</b> a los
+///      observadores registrados (patrón Observer). Envíos ya no conoce a Ranking: solo
+///      notifica; quien quiera reaccionar se suscribe como IEnvioObserver.
 /// </summary>
 public class EnvioService : IEnviosApi
 {
     private readonly EnvioRepository _repo;
     private readonly IEvaluacionApi _evaluacion;
-    private readonly IRankingApi _ranking;
+    private readonly IEnumerable<IEnvioObserver> _observers;
 
-    public EnvioService(EnvioRepository repo, IEvaluacionApi evaluacion, IRankingApi ranking)
+    public EnvioService(EnvioRepository repo, IEvaluacionApi evaluacion, IEnumerable<IEnvioObserver> observers)
     {
         _repo = repo;
         _evaluacion = evaluacion;
-        _ranking = ranking;
+        _observers = observers;
     }
 
     public async Task<Envio> EnviarAsync(Envio envio)
@@ -43,7 +43,11 @@ public class EnvioService : IEnviosApi
             guardado = await _repo.Guardar(guardado);
 
             if (esPrimerAceptado)
-                await _ranking.RegistrarAciertoAsync(envio.UsuarioId, envio.RetoId);
+            {
+                var evento = new EnvioAceptadoEvent(envio.UsuarioId, envio.RetoId);
+                foreach (var observer in _observers)
+                    await observer.OnEnvioAceptadoAsync(evento);
+            }
         }
         catch
         {

@@ -1,49 +1,27 @@
 using System.Diagnostics;
-using System.Net.Http.Json;
+using System.Text;
 using CodeMX.Api.Modules.Retos;
 
 namespace CodeMX.Api.Modules.Evaluacion;
 
 /// <summary>
-/// Cliente del módulo Evaluación hacia el Servicio Python externo (sandbox de ejecución).
-///
-/// Según el diagrama del ADR-04, este es el único componente que se comunica con el
-/// servicio Python por HTTP/JSON. La llamada usa un timeout explícito (Evaluador:TimeoutMs).
-/// Mientras el servicio Python no esté disponible, cae a una ejecución local con un proceso
-/// python3 que respeta el mismo timeout.
+/// Estrategia concreta (Strategy): ejecuta el código localmente con un proceso python3,
+/// respetando el mismo timeout. Sirve de respaldo mientras el Servicio Python externo
+/// no esté disponible.
 /// </summary>
-public class RunnerClient
+public class EvaluacionLocalStrategy : IEvaluacionStrategy
 {
-    private readonly HttpClient _http;
-    private readonly string _evaluadorUrl;
     private readonly int _timeoutMs;
 
-    public RunnerClient(HttpClient http, IConfiguration config)
+    public EvaluacionLocalStrategy(IConfiguration config)
     {
-        _http = http;
-        _evaluadorUrl = config["Evaluador:Url"] ?? "http://localhost:8000";
         _timeoutMs = int.TryParse(config["Evaluador:TimeoutMs"], out var t) ? t : 5000;
     }
 
-    public async Task<ResultadoEvaluacion> EjecutarAsync(SolicitudEvaluacion solicitud, List<CasoPrueba> casos)
-    {
-        try
-        {
-            using var cts = new CancellationTokenSource(_timeoutMs);
-            var resp = await _http.PostAsJsonAsync($"{_evaluadorUrl}/evaluar", solicitud, cts.Token);
-            resp.EnsureSuccessStatusCode();
-            var resultado = await resp.Content.ReadFromJsonAsync<ResultadoEvaluacion>(cancellationToken: cts.Token);
-            if (resultado is not null) return resultado;
-        }
-        catch
-        {
-            // El Servicio Python no está disponible: se evalúa localmente.
-        }
+    public Task<ResultadoEvaluacion> EjecutarAsync(SolicitudEvaluacion solicitud, List<CasoPrueba> casos)
+        => Task.FromResult(Ejecutar(solicitud.CodigoFuente, casos));
 
-        return EjecutarLocalmente(solicitud.CodigoFuente, casos);
-    }
-
-    private ResultadoEvaluacion EjecutarLocalmente(string codigo, List<CasoPrueba> casos)
+    private ResultadoEvaluacion Ejecutar(string codigo, List<CasoPrueba> casos)
     {
         if (casos.Count == 0)
             return new ResultadoEvaluacion("ERROR_EN_EJECUCION", "El reto no tiene casos de prueba configurados", 0);
@@ -58,11 +36,9 @@ public class RunnerClient
                 var esperado = (caso.OutputEsperado ?? "").Trim();
 
                 if (salida != esperado)
-                {
                     return new ResultadoEvaluacion("INCORRECTO",
                         "Salida incorrecta para la entrada: " + (caso.InputData ?? "").Replace("\n", " | "),
                         (long)(DateTime.UtcNow - inicio).TotalMilliseconds);
-                }
             }
             catch (TimeoutException)
             {
