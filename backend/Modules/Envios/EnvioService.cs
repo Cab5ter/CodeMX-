@@ -59,4 +59,6 @@ public class EnvioService : IEnviosApi
     public Task<List<Envio>> ListarPorUsuarioAsync(long usuarioId) => _repo.ListarPorUsuario(usuarioId);
 
     public Task<List<Envio>> ListarPorRetoAsync(long retoId) => _repo.ListarPorReto(retoId);
+
+    public Task<bool> TieneAceptadoAsync(long usuarioId, long retoId) => _repo.TieneAceptado(usuarioId, retoId);
 }

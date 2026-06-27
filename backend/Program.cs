@@ -1,3 +1,4 @@
+using CodeMX.Api.Modules.Cursos;
 using CodeMX.Api.Modules.Envios;
 using CodeMX.Api.Modules.Evaluacion;
 using CodeMX.Api.Modules.Ranking;
@@ -33,6 +34,7 @@ builder.Services.AddScoped<UsuarioRepository>();
 builder.Services.AddScoped<RetoRepository>();
 builder.Services.AddScoped<EnvioRepository>();
 builder.Services.AddScoped<RankingRepository>();
+builder.Services.AddScoped<CursoRepository>();
 
 // --- APIs públicas de cada módulo (interfaces entre módulos) ---
 builder.Services.AddScoped<IUsuariosApi, UsuarioService>();
@@ -40,6 +42,7 @@ builder.Services.AddScoped<IRetosApi, RetoService>();
 builder.Services.AddScoped<IEnviosApi, EnvioService>();
 builder.Services.AddScoped<IRankingApi, RankingService>();
 builder.Services.AddScoped<IEvaluacionApi, EvaluacionService>();
+builder.Services.AddScoped<ICursosApi, CursoService>();
 
 // --- Cliente HTTP del módulo Evaluación hacia el Servicio Python ---
 builder.Services.AddHttpClient<RunnerClient>();

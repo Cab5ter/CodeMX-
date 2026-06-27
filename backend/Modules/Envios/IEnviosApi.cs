@@ -10,4 +10,7 @@ public interface IEnviosApi
     Task<Envio?> BuscarPorIdAsync(long id);
     Task<List<Envio>> ListarPorUsuarioAsync(long usuarioId);
     Task<List<Envio>> ListarPorRetoAsync(long retoId);
+
+    /// <summary>True si el usuario ya resolvió (ACEPTADO) ese reto. Lo usa el módulo Cursos.</summary>
+    Task<bool> TieneAceptadoAsync(long usuarioId, long retoId);
 }

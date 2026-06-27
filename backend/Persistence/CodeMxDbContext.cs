@@ -1,3 +1,4 @@
+using CodeMX.Api.Modules.Cursos;
 using CodeMX.Api.Modules.Envios;
 using CodeMX.Api.Modules.Ranking;
 using CodeMX.Api.Modules.Retos;
@@ -20,6 +21,10 @@ public class CodeMxDbContext : DbContext
     public DbSet<CasoPrueba> CasosPrueba => Set<CasoPrueba>();
     public DbSet<Envio> Envios => Set<Envio>();
     public DbSet<EntradaRanking> Ranking => Set<EntradaRanking>();
+    public DbSet<Modulo> Modulos => Set<Modulo>();
+    public DbSet<Leccion> Lecciones => Set<Leccion>();
+    public DbSet<ProgresoLeccion> ProgresoLecciones => Set<ProgresoLeccion>();
+    public DbSet<PreguntaExamen> PreguntasExamen => Set<PreguntaExamen>();
 
     protected override void OnModelCreating(ModelBuilder model)
     {
@@ -58,6 +63,30 @@ public class CodeMxDbContext : DbContext
             e.ToTable("ranking", schema: "ranking");
             e.HasKey(x => x.Id);
             e.HasIndex(x => x.UsuarioId).IsUnique();
+        });
+
+        // --- esquema cursos ---
+        model.Entity<Modulo>(e =>
+        {
+            e.ToTable("modulos", schema: "cursos");
+            e.HasKey(x => x.Id);
+        });
+        model.Entity<Leccion>(e =>
+        {
+            e.ToTable("lecciones", schema: "cursos");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Tipo).HasConversion<string>();
+        });
+        model.Entity<ProgresoLeccion>(e =>
+        {
+            e.ToTable("progreso_lecciones", schema: "cursos");
+            e.HasKey(x => x.Id);
+            e.HasIndex(x => new { x.UsuarioId, x.LeccionId }).IsUnique();
+        });
+        model.Entity<PreguntaExamen>(e =>
+        {
+            e.ToTable("preguntas_examen", schema: "cursos");
+            e.HasKey(x => x.Id);
         });
     }
 }
