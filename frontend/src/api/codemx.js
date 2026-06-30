@@ -35,6 +35,17 @@ export async function registrarUsuario(datos) {
   return res.json()
 }
 
+export async function iniciarSesion({ email, passwordHash }) {
+  const res = await fetch(`${BASE}/usuarios/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, passwordHash })
+  })
+  if (res.status === 401) throw new Error('Correo o contraseña incorrectos')
+  if (!res.ok) throw new Error('No se pudo iniciar sesión')
+  return res.json()
+}
+
 export async function enviarSolucion({ usuarioId, retoId, codigoFuente }) {
   const res = await fetch(`${BASE}/envios`, {
     method: 'POST',

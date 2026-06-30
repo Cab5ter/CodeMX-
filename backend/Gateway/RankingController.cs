@@ -14,7 +14,7 @@ public class RankingController : ControllerBase
     public RankingController(IRankingApi ranking) => _ranking = ranking;
 
     [HttpGet]
-    public async Task<ActionResult<List<EntradaRanking>>> Obtener() => Ok(await _ranking.ObtenerRankingAsync());
+    public async Task<ActionResult<List<EntradaRankingDto>>> Obtener() => Ok(await _ranking.ObtenerRankingConNombresAsync());
 
     [HttpGet("usuario/{usuarioId:long}")]
     public async Task<ActionResult<EntradaRanking>> PorUsuario(long usuarioId)

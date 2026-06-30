@@ -1,4 +1,5 @@
 using CodeMX.Api.Modules.Cursos;
+using CodeMX.Api.Modules.Duelos;
 using CodeMX.Api.Modules.Envios;
 using CodeMX.Api.Modules.Ranking;
 using CodeMX.Api.Modules.Retos;
@@ -25,6 +26,7 @@ public class CodeMxDbContext : DbContext
     public DbSet<Leccion> Lecciones => Set<Leccion>();
     public DbSet<ProgresoLeccion> ProgresoLecciones => Set<ProgresoLeccion>();
     public DbSet<PreguntaExamen> PreguntasExamen => Set<PreguntaExamen>();
+    public DbSet<Duelo> Duelos => Set<Duelo>();
 
     protected override void OnModelCreating(ModelBuilder model)
     {
@@ -87,6 +89,15 @@ public class CodeMxDbContext : DbContext
         {
             e.ToTable("preguntas_examen", schema: "cursos");
             e.HasKey(x => x.Id);
+        });
+
+        // --- esquema duelos ---
+        model.Entity<Duelo>(e =>
+        {
+            e.ToTable("duelos", schema: "duelos");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Estado).HasConversion<string>();
+            e.Property(x => x.Dificultad).HasConversion<string>();
         });
     }
 }

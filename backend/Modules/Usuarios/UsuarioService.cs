@@ -13,6 +13,12 @@ public class UsuarioService : IUsuariosApi
 
     public Task<Usuario?> BuscarPorEmailAsync(string email) => _repo.BuscarPorEmail(email);
 
+    public async Task<Usuario?> AutenticarAsync(string email, string passwordHash)
+    {
+        var usuario = await _repo.BuscarPorEmail(email);
+        return usuario is not null && usuario.PasswordHash == passwordHash ? usuario : null;
+    }
+
     public Task<Usuario> GuardarAsync(Usuario usuario) => _repo.Guardar(usuario);
 
     public Task EliminarAsync(long id) => _repo.Eliminar(id);

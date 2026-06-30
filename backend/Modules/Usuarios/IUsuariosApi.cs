@@ -9,6 +9,10 @@ public interface IUsuariosApi
     Task<List<Usuario>> ListarTodosAsync();
     Task<Usuario?> BuscarPorIdAsync(long id);
     Task<Usuario?> BuscarPorEmailAsync(string email);
+
+    /// <summary>Valida credenciales (correo + contraseña). Devuelve el usuario o null si no coinciden.</summary>
+    Task<Usuario?> AutenticarAsync(string email, string passwordHash);
+
     Task<Usuario> GuardarAsync(Usuario usuario);
     Task EliminarAsync(long id);
 }

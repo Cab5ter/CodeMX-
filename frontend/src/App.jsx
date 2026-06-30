@@ -8,6 +8,8 @@ import Inicio from './pages/Inicio'
 import DetalleReto from './pages/DetalleReto'
 import Ranking from './pages/Ranking'
 import Registro from './pages/Registro'
+import Login from './pages/Login'
+import Versus from './pages/Versus'
 
 export default function App() {
   return (
@@ -23,7 +25,9 @@ export default function App() {
             <Route path="/ejercicios" element={<Inicio />} />
             <Route path="/retos/:id" element={<DetalleReto />} />
             <Route path="/ranking" element={<Ranking />} />
+            <Route path="/vs" element={<Versus />} />
             <Route path="/registro" element={<Registro />} />
+            <Route path="/login" element={<Login />} />
           </Routes>
         </main>
       </div>

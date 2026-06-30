@@ -1,9 +1,9 @@
 import { Link } from 'react-router-dom'
 
 const DIFFICULTY = {
-  BASICO:     { label: 'Básico',      border: 'border-l-emerald-500', badge: 'bg-emerald-500/10 text-emerald-400 ring-1 ring-emerald-500/30' },
-  INTERMEDIO: { label: 'Intermedio',  border: 'border-l-amber-400',   badge: 'bg-amber-500/10  text-amber-400  ring-1 ring-amber-400/30'  },
-  AVANZADO:   { label: 'Avanzado',    border: 'border-l-red-500',     badge: 'bg-red-500/10    text-red-400    ring-1 ring-red-500/30'    },
+  BASICO:     { label: 'Básico',      puntos: 10, border: 'border-l-emerald-500', badge: 'bg-emerald-500/10 text-emerald-400 ring-1 ring-emerald-500/30' },
+  INTERMEDIO: { label: 'Intermedio',  puntos: 25, border: 'border-l-amber-400',   badge: 'bg-amber-500/10  text-amber-400  ring-1 ring-amber-400/30'  },
+  AVANZADO:   { label: 'Avanzado',    puntos: 50, border: 'border-l-red-500',     badge: 'bg-red-500/10    text-red-400    ring-1 ring-red-500/30'    },
 }
 
 export default function RetoCard({ reto }) {
@@ -22,10 +22,11 @@ export default function RetoCard({ reto }) {
             </h3>
             <p className="text-gray-500 text-sm mt-1.5 line-clamp-1">{reto.descripcion.split('\n')[0]}</p>
           </div>
-          <div className="flex flex-col items-end gap-3 flex-shrink-0">
+          <div className="flex flex-col items-end gap-2 flex-shrink-0">
             <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${d.badge}`}>
               {d.label}
             </span>
+            <span className="text-emerald-400 text-xs font-semibold">+{d.puntos} pts</span>
             <span className="text-gray-600 text-xs group-hover:text-emerald-400 transition-colors font-medium">
               Resolver →
             </span>
