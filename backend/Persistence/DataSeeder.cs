@@ -70,48 +70,52 @@ public static class DataSeeder
             Dificultad.BASICO,
             ("", "25"));
 
-        // --- INTERMEDIO: lectura de una entrada y condicionales ---
+        // --- INTERMEDIO: variables fijas y condicionales, SIN entrada ---
         CrearReto(db, "El doble",
-            "Lee un número entero e imprime su doble.\n\nEntrada: un entero.\nSalida: el número multiplicado por 2.",
+            "Crea la variable n = 4 e imprime su doble (n multiplicado por 2).\n\nSalida esperada:\n8",
             Dificultad.INTERMEDIO,
-            ("4", "8"), ("10", "20"), ("0", "0"), ("-3", "-6"));
+            ("", "8"));
 
         CrearReto(db, "Saludo personalizado",
-            "Lee un nombre e imprime un saludo con el formato: Hola, NOMBRE!\n\n" +
-            "Entrada: una línea con un nombre.\nEjemplo: si la entrada es Ana, la salida es Hola, Ana!",
+            "Crea la variable nombre = \"Ana\" e imprime un saludo con el formato: Hola, NOMBRE!\n\n" +
+            "Salida esperada:\nHola, Ana!",
             Dificultad.INTERMEDIO,
-            ("Ana", "Hola, Ana!"), ("Luis", "Hola, Luis!"));
+            ("", "Hola, Ana!"));
 
         CrearReto(db, "Par o impar",
-            "Lee un entero N e imprime PAR si es par o IMPAR si es impar.",
+            "Crea la variable n = 7. Imprime PAR si es par o IMPAR si es impar (usa n % 2).\n\nSalida esperada:\nIMPAR",
             Dificultad.INTERMEDIO,
-            ("4", "PAR"), ("7", "IMPAR"), ("0", "PAR"));
+            ("", "IMPAR"));
 
         CrearReto(db, "Suma de dos números",
-            "Lee dos enteros A y B (en la misma línea, separados por un espacio) e imprime su suma.",
+            "Crea dos variables a = 2 y b = 3. Imprime el resultado de sumarlas.\n\nSalida esperada:\n5",
             Dificultad.INTERMEDIO,
-            ("2 3", "5"), ("10 -5", "5"), ("0 0", "0"), ("-7 -3", "-10"));
+            ("", "5"));
 
-        // --- DIFÍCIL: ciclos y algoritmos ---
+        // --- DIFÍCIL: ciclos y algoritmos con valores fijos, SIN entrada ---
         CrearReto(db, "FizzBuzz",
-            "Dado un entero N, imprime los números del 1 al N. Múltiplos de 3 => 'Fizz', de 5 => 'Buzz', de ambos => 'FizzBuzz'.",
+            "Crea la variable n = 5. Imprime los números del 1 al n; múltiplos de 3 => 'Fizz', de 5 => 'Buzz', " +
+            "de ambos => 'FizzBuzz'.\n\nSalida esperada:\n1\n2\nFizz\n4\nBuzz",
             Dificultad.AVANZADO,
-            ("5", "1\n2\nFizz\n4\nBuzz"), ("3", "1\n2\nFizz"));
+            ("", "1\n2\nFizz\n4\nBuzz"));
 
         CrearReto(db, "Números primos hasta N",
-            "Dado un entero N, imprime todos los números primos menores o iguales a N, uno por línea.",
+            "Crea la variable n = 10. Imprime todos los números primos menores o iguales a n, uno por línea.\n\n" +
+            "Salida esperada:\n2\n3\n5\n7",
             Dificultad.AVANZADO,
-            ("10", "2\n3\n5\n7"), ("2", "2"));
+            ("", "2\n3\n5\n7"));
 
         CrearReto(db, "Fibonacci iterativo",
-            "Dado un entero N, imprime los primeros N términos de Fibonacci separados por espacios (empieza en 0 1).",
+            "Crea la variable n = 8. Imprime los primeros n términos de Fibonacci separados por espacios " +
+            "(empieza en 0 1).\n\nSalida esperada:\n0 1 1 2 3 5 8 13",
             Dificultad.AVANZADO,
-            ("8", "0 1 1 2 3 5 8 13"), ("1", "0"));
+            ("", "0 1 1 2 3 5 8 13"));
 
         CrearReto(db, "Búsqueda binaria",
-            "Dado N, un arreglo ordenado y un valor K, imprime el índice (base 0) de K o -1 si no existe.",
+            "Crea el arreglo ordenado arr = [1, 3, 5, 7, 9] y el valor k = 5. Imprime el índice (base 0) de k " +
+            "en arr, o -1 si no existe.\n\nSalida esperada:\n2",
             Dificultad.AVANZADO,
-            ("5\n1 3 5 7 9\n5", "2"), ("5\n1 3 5 7 9\n4", "-1"));
+            ("", "2"));
 
         db.SaveChanges();
     }
