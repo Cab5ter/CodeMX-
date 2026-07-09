@@ -48,3 +48,43 @@ C4Context
 sistemas externos: el **evaluador Python** (decide si el código pasa los casos de prueba)
 y la **API de Claude** (inventa los problemas de los duelos). Todo lo demás vive dentro
 del sistema y se detalla en los niveles siguientes.
+
+---
+
+## Nivel 2 — Contenedores
+
+> **¿Para quién es?** Para el equipo técnico (desarrolladores, DevOps). **¿Qué pregunta
+> responde?** *¿De qué piezas ejecutables se compone CodeMX, qué tecnología usa cada una
+> y cómo se comunican entre sí?* Un "contenedor" en C4 es algo que corre por separado
+> (una app, una API, una base de datos), no un contenedor de Docker.
+
+```mermaid
+C4Container
+    title Nivel 2 - Contenedores de CodeMX
+
+    Person(estudiante, "Estudiante", "Usuario final, desde el navegador")
+
+    System_Boundary(codemx, "CodeMX") {
+        Container(spa, "SPA Frontend", "React 18 + Vite 5 + Tailwind + React Router", "Interfaz web; consume la API por rutas relativas /api mediante el proxy de Vite")
+        Container(api, "API REST", "ASP.NET Core (.NET 10), monolito modular", "Toda la lógica de negocio; expone REST (Swagger/OpenAPI) y un hub SignalR para los duelos")
+        ContainerDb(db, "Base de datos", "PostgreSQL + EF Core (Npgsql)", "Usuarios, retos, envíos, cursos, ranking y duelos; un esquema por módulo, creado con EnsureCreated")
+    }
+
+    System_Ext(evaluador, "Evaluador Python", "Ejecuta el código contra los casos de prueba")
+    System_Ext(claude, "Anthropic Claude API", "Genera los problemas de los duelos")
+
+    Rel(estudiante, spa, "Usa", "HTTPS")
+    Rel(spa, api, "Llamadas de datos", "REST · HTTP/JSON (/api/*)")
+    Rel(spa, api, "Duelos en tiempo real", "WebSocket (SignalR)")
+    Rel(api, db, "Lee y escribe", "EF Core / Npgsql")
+    Rel(api, evaluador, "Evalúa envíos", "HTTP / JSON")
+    Rel(api, claude, "Genera problemas", "HTTPS / SDK")
+
+    UpdateLayoutConfig($c4ShapeInRow="2", $c4BoundaryInRow="1")
+```
+
+**Lectura del diagrama:** son **tres contenedores propios**. El **SPA de React** solo
+pinta la interfaz y llama al backend (por el proxy `/api`, así no hay URLs incrustadas).
+La **API .NET** concentra la lógica y habla con tres cosas: la **base PostgreSQL** (vía EF
+Core), el **evaluador Python** (HTTP) y la **API de Claude** (SDK). Los duelos usan un
+canal aparte en **tiempo real (SignalR/WebSocket)**, no REST.
