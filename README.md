@@ -30,6 +30,108 @@ su interfaz pública. Ver las decisiones de arquitectura en los archivos `ADR-0X
 
 ---
 
+## Deuda técnica identificada
+
+### DT-01 — Autenticación y exposición de credenciales inseguras
+
+**Estado:** abierta<br>
+**Prioridad:** crítica<br>
+**Tipo:** seguridad y diseño<br>
+**Componentes afectados:** frontend, API de Usuarios y base de datos
+
+#### Evidencia
+
+Aunque el atributo se llama `PasswordHash`, actualmente la aplicación trata su valor
+como una contraseña en texto plano:
+
+- `frontend/src/pages/Registro.jsx` y `frontend/src/pages/Login.jsx` capturan la
+  contraseña en `passwordHash` y la envían directamente a la API.
+- `backend/Modules/Usuarios/UsuarioService.cs` autentica mediante la comparación
+  `usuario.PasswordHash == passwordHash`; no existe una función de hash ni una
+  verificación criptográfica.
+- `backend/Gateway/UsuariosController.cs` devuelve la entidad `Usuario` completa en
+  las operaciones de creación, consulta, listado e inicio de sesión. Por lo tanto, el
+  campo `PasswordHash` forma parte de las respuestas JSON.
+- No existe un mecanismo de sesión o token. El frontend conserva únicamente el objeto
+  del usuario y otras operaciones confían en identificadores de usuario enviados por
+  el cliente.
+
+#### Impacto
+
+Una lectura de la base de datos o una respuesta interceptada permite obtener las
+contraseñas reutilizables de los usuarios. Además, cualquier consumidor de la API
+puede consultar la lista de usuarios y recibir sus credenciales. La ausencia de
+autenticación verificable también permite suplantar a otro usuario enviando su
+identificador en solicitudes de envíos, cursos o duelos.
+
+Esta deuda debe resolverse antes de publicar CodeMX fuera de un entorno local. Su
+severidad es **crítica** porque compromete confidencialidad, autenticidad y datos de
+todos los usuarios.
+
+#### Propuesta concreta de solución
+
+1. **Separar contratos y entidad.** Crear DTOs específicos: `RegistroRequest`,
+   `LoginRequest` y `UsuarioResponse`. Los DTOs de entrada recibirán `Password`; el DTO
+   de salida solo expondrá `Id`, `Nombre`, `Email` y `CreadoEn`. La entidad de
+   persistencia conservará `PasswordHash`, marcado además con `[JsonIgnore]` como
+   defensa adicional.
+2. **Aplicar hash seguro en el servidor.** Incorporar `IPasswordHasher<Usuario>` de
+   ASP.NET Core Identity (PBKDF2 con salt por usuario). Al registrar, guardar el
+   resultado de `HashPassword`; al iniciar sesión, usar `VerifyHashedPassword`. La
+   contraseña nunca se debe registrar en logs, devolver por JSON ni persistir sin hash.
+3. **Implementar autenticación.** Emitir un token JWT de corta duración después de un
+   login válido, configurar `AddAuthentication().AddJwtBearer()` y proteger las rutas
+   privadas con `[Authorize]`. El backend debe tomar el identificador del usuario desde
+   los *claims* del token, no desde un valor confiado al cliente.
+4. **Migrar datos existentes.** Como no es posible transformar contraseñas planas en
+   hashes sin conocer de forma segura su procedencia, invalidar las credenciales
+   actuales y solicitar restablecimiento. Agregar una migración de EF Core que limite
+   la longitud y nulabilidad de `PasswordHash`; sustituir `EnsureCreated()` por
+   `Database.Migrate()` para que el cambio sea reproducible.
+5. **Añadir pruebas automatizadas.** Cubrir registro, login correcto e incorrecto,
+   respuestas sin `PasswordHash`, acceso sin token (`401`) y rechazo de un `usuarioId`
+   que no coincida con el sujeto autenticado.
+
+#### Criterios de aceptación
+
+- Ninguna respuesta de `/api/usuarios` contiene `Password` ni `PasswordHash`.
+- La contraseña almacenada no coincide con la recibida y se valida mediante un
+  algoritmo de hash con salt.
+- Las rutas privadas responden `401` sin un token válido y `403` cuando el usuario no
+  tiene permiso sobre el recurso.
+- La identidad usada para crear envíos, registrar progreso y participar en duelos se
+  obtiene del token autenticado.
+- Las pruebas de autenticación y autorización se ejecutan automáticamente en CI.
+
+#### Estimación y seguimiento
+
+| Fase | Trabajo | Estimación |
+|------|---------|------------|
+| 1 | DTOs, ocultamiento de credenciales y hash de contraseñas | 1 día |
+| 2 | JWT, autorización de endpoints y adaptación del frontend | 2 días |
+| 3 | Migración, pruebas de integración y documentación de configuración | 1–2 días |
+
+**Estimación total:** 4–5 días de desarrollo. El trabajo puede dividirse en entregas,
+pero las fases 1 y 2 deben desplegarse juntas para no mantener contratos inseguros.
+
+### Riesgo técnico relacionado — ejecución local de código
+
+`backend/Modules/Evaluacion/EvaluacionLocalStrategy.cs` escribe código proporcionado
+por el usuario en un archivo temporal y lo ejecuta con `python3` en el mismo sistema
+operativo que la API. El límite de tiempo detiene procesos largos, pero no restringe
+acceso a archivos, red, memoria, CPU ni llamadas al sistema. Por ello, esta estrategia
+de respaldo no debe habilitarse en un entorno compartido o de producción.
+
+La remediación propuesta es ejecutar cada evaluación en un *sandbox* aislado
+(contenedor efímero sin red, usuario sin privilegios, sistema de archivos de solo
+lectura y límites de CPU, memoria, procesos y tiempo). La API debe comunicarse
+exclusivamente con ese servicio; si no está disponible, el envío debe permanecer en
+cola o devolver un error controlado, sin ejecutar código dentro del proceso anfitrión.
+Se considera resuelto cuando pruebas de escape confirman que el programa evaluado no
+puede leer archivos del host, abrir conexiones ni exceder los recursos asignados.
+
+---
+
 ## Cómo prender el proyecto (básico)
 
 ### Requisitos previos
