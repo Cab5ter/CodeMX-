@@ -24,14 +24,14 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
 /**
- * Canal de tiempo real del modo 1 vs 1 (reemplaza al hub de SignalR). Maneja el
- * emparejamiento, el envío de soluciones (que se evalúan en el servidor contra los casos
- * del problema), el cierre del duelo con puntos y el chat en vivo entre los dos jugadores.
+ * Canal de tiempo real del modo 1 vs 1. Maneja el emparejamiento, el envío de soluciones
+ * (que se evalúan en el servidor contra los casos del problema), el cierre del duelo con
+ * puntos y el chat en vivo entre los dos jugadores.
  *
  * <p>Protocolo: JSON por WebSocket, con la misma forma en ambos sentidos —
  * <code>{"target": "...", "arguments": [...]}</code>. El cliente
- * (<code>frontend/src/api/duelosHub.js</code>) expone sobre esto la misma superficie
- * <code>on/invoke/start/stop</code> que traía SignalR, así que los componentes no cambian.
+ * (<code>frontend/src/api/duelosHub.js</code>) expone sobre esto una superficie
+ * <code>on/invoke/start/stop</code>, así que los componentes no hablan del protocolo.
  *
  * <p>Mensajes que el cliente puede invocar: {@code BuscarDuelo}, {@code EnviarSolucion},
  * {@code EnviarMensaje}, {@code Escribiendo}.

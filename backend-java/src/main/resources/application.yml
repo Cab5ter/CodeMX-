@@ -7,9 +7,9 @@ spring:
     name: codemx-api
 
   datasource:
-    # Base propia: el backend .NET sigue usando codemx_api con un esquema distinto
-    # (EF Core nombra las columnas "Id"/"Jugador1Id"; JPA usa snake_case). Apuntar
-    # ambos a la misma base corrompería el esquema de uno u otro.
+    # Base propia de esta implementación. No se reutiliza codemx_api: esa base fue
+    # creada por una implementación anterior que nombra las columnas "Id"/"Jugador1Id",
+    # incompatible con el snake_case que genera Hibernate.
     url: jdbc:postgresql://localhost:5432/codemx_spring
     username: postgres
     password: ""
@@ -28,7 +28,7 @@ spring:
     open-in-view: false
 
   jackson:
-    # Los enums (Dificultad, Veredicto) se serializan como texto, igual que en la versión .NET.
+    # Los enums (Dificultad, Veredicto) se serializan como texto, no como ordinal.
     default-property-inclusion: always
 
 # Swagger disponible siempre: la documentación del contrato es parte del ADR-04.

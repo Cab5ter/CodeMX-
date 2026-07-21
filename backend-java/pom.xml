@@ -15,7 +15,7 @@
   <artifactId>codemx-api</artifactId>
   <version>0.0.1-SNAPSHOT</version>
   <name>CodeMX API</name>
-  <description>Monolito modular de CodeMX (Spring Boot). Equivalente funcional del backend ASP.NET Core — ADR-03/04.</description>
+  <description>Monolito modular de CodeMX: gateway REST, un módulo por dominio e interfaces públicas entre ellos — ADR-03/04.</description>
 
   <properties>
     <java.version>25</java.version>
@@ -31,7 +31,7 @@
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-data-jpa</artifactId>
     </dependency>
-    <!-- Tiempo real del modo 1 vs 1 (reemplaza a SignalR). -->
+    <!-- Tiempo real del modo 1 vs 1. -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-websocket</artifactId>
@@ -43,7 +43,7 @@
       <scope>runtime</scope>
     </dependency>
 
-    <!-- Swagger / OpenAPI: equivalente de Swashbuckle (ADR-04). v3.x es la línea para Spring Boot 4. -->
+    <!-- Swagger / OpenAPI para documentar el contrato (ADR-04). v3.x es la línea para Spring Boot 4. -->
     <dependency>
       <groupId>org.springdoc</groupId>
       <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>

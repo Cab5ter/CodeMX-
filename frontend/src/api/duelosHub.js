@@ -1,9 +1,9 @@
 // Conexión al canal de tiempo real del modo 1 vs 1.
 //
-// El backend Spring Boot expone un WebSocket propio en /api/hub/duelos (no SignalR).
-// El protocolo es JSON simétrico: { target, arguments }. Esta función envuelve el
-// WebSocket en la misma superficie que traía @microsoft/signalr — on / onclose /
-// start / stop / invoke — para que los componentes no cambien.
+// El backend expone un WebSocket en /api/hub/duelos con un protocolo JSON simétrico:
+// { target, arguments }. Esta función lo envuelve en una superficie pequeña —
+// on / onclose / start / stop / invoke — para que los componentes no hablen del
+// protocolo ni del transporte.
 //
 // La URL es relativa, así que pasa por el proxy de Vite (que tiene ws: true) hacia el
 // backend en :8080 — funciona igual desde localhost o desde otra máquina de la red.
@@ -61,9 +61,9 @@ export function crearConexionDuelos() {
     },
 
     /**
-     * Invoca un método del servidor. A diferencia de SignalR no espera confirmación:
-     * el servidor responde siempre por un evento (ResultadoEnvio, DueloIniciado, …),
-     * así que la promesa sólo refleja que el mensaje salió.
+     * Invoca un método del servidor. No espera confirmación: el servidor responde
+     * siempre por un evento (ResultadoEnvio, DueloIniciado, …), así que la promesa
+     * sólo refleja que el mensaje salió.
      */
     invoke(target, ...args) {
       return new Promise((resolve, reject) => {
