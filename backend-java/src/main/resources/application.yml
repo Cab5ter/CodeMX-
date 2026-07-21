@@ -1,0 +1,47 @@
+server:
+  port: 8080
+  address: 0.0.0.0
+
+spring:
+  application:
+    name: codemx-api
+
+  datasource:
+    # Base propia: el backend .NET sigue usando codemx_api con un esquema distinto
+    # (EF Core nombra las columnas "Id"/"Jugador1Id"; JPA usa snake_case). Apuntar
+    # ambos a la misma base corrompería el esquema de uno u otro.
+    url: jdbc:postgresql://localhost:5432/codemx_spring
+    username: postgres
+    password: ""
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        # PostgreSQL es la única fuente de verdad, con un esquema lógico por módulo
+        # (usuarios, retos, envios, ranking, cursos, duelos) — ADR-03. Hibernate necesita
+        # crear esos esquemas antes de las tablas.
+        hbm2ddl:
+          create_namespaces: true
+        format_sql: false
+    open-in-view: false
+
+  jackson:
+    # Los enums (Dificultad, Veredicto) se serializan como texto, igual que en la versión .NET.
+    default-property-inclusion: always
+
+# Swagger disponible siempre: la documentación del contrato es parte del ADR-04.
+springdoc:
+  swagger-ui:
+    path: /swagger
+
+logging:
+  level:
+    root: INFO
+    org.springframework.web: WARN
+
+# Servicio Python externo (sandbox de evaluación) usado por la estrategia remota.
+evaluador:
+  url: http://localhost:8000
+  timeout-ms: 5000
