@@ -249,7 +249,7 @@ public class DataSeeder implements CommandLineRunner {
 
     private void teoria(Modulo modulo, int orden, String titulo, String contenido, String ejemplo) {
         Leccion l = new Leccion();
-        l.setModuloId(modulo.getId());
+        l.setModulo(modulo);
         l.setOrden(orden);
         l.setTitulo(titulo);
         l.setTipo(TipoLeccion.TEORIA);
@@ -262,7 +262,7 @@ public class DataSeeder implements CommandLineRunner {
         Long retoId = retos.findByTitulo(tituloReto).map(Reto::getId).orElse(null);
 
         Leccion l = new Leccion();
-        l.setModuloId(modulo.getId());
+        l.setModulo(modulo);
         l.setOrden(orden);
         l.setTitulo(titulo);
         l.setTipo(TipoLeccion.EJERCICIO);
@@ -273,7 +273,7 @@ public class DataSeeder implements CommandLineRunner {
     private void examen(Modulo modulo, int orden, String enunciado,
                         String a, String b, String c, String d, int correcta) {
         PreguntaExamen p = new PreguntaExamen();
-        p.setModuloId(modulo.getId());
+        p.setModulo(modulo);
         p.setOrden(orden);
         p.setEnunciado(enunciado);
         p.setOpcionA(a);

@@ -2,9 +2,12 @@ package mx.codemx.modules.cursos;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 /** Pregunta de opción múltiple del examen de un módulo. */
@@ -16,8 +19,10 @@ public class PreguntaExamen {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "modulo_id", nullable = false)
-    private long moduloId;
+    /** Lado <b>muchos</b> —y dueño— de la relación con {@link Modulo}. */
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "modulo_id", nullable = false)
+    private Modulo modulo;
 
     @Column(nullable = false, columnDefinition = "text")
     private String enunciado = "";
@@ -49,12 +54,12 @@ public class PreguntaExamen {
         this.id = id;
     }
 
-    public long getModuloId() {
-        return moduloId;
+    public Modulo getModulo() {
+        return modulo;
     }
 
-    public void setModuloId(long moduloId) {
-        this.moduloId = moduloId;
+    public void setModulo(Modulo modulo) {
+        this.modulo = modulo;
     }
 
     public String getEnunciado() {
