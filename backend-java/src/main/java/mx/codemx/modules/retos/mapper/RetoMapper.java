@@ -25,6 +25,10 @@ public interface RetoMapper {
      */
     @Mapping(source = "fechaCreacion", target = "creadoEn",
             defaultExpression = "java(java.time.Instant.now())")
+    // Los casos de prueba no viajan en el dominio: publicarlos revelaría las respuestas.
+    // Se ignoran de forma explícita porque unmappedTargetPolicy=ERROR exige decidir sobre
+    // cada campo del destino.
+    @Mapping(target = "casos", ignore = true)
     @Mapping(source = "titulo", target = "titulo", defaultValue = "")
     @Mapping(source = "descripcion", target = "descripcion", defaultValue = "")
     @Mapping(source = "dificultad", target = "dificultad", defaultValue = "BASICO")
