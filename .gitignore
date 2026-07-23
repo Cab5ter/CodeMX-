@@ -1,0 +1,10 @@
+bin/
+obj/
+[Dd]ebug/
+[Rr]elease/
+*.user
+TestResults/
+*.trx
+.vs/
+.vscode/
+.idea/
