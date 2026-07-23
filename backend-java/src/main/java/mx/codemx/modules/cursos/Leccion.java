@@ -16,7 +16,6 @@ import jakarta.persistence.Table;
 import java.util.ArrayList;
 import java.util.List;
 
-/** Lección de un módulo: teoría o ejercicio enlazado a un reto. */
 @Entity
 @Table(name = "lecciones", schema = "cursos")
 public class Leccion {
@@ -25,10 +24,6 @@ public class Leccion {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    /**
-     * Lado <b>muchos</b> —y dueño— de la relación con {@link Modulo}: mantiene la
-     * columna {@code modulo_id}.
-     */
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "modulo_id", nullable = false)
     private Modulo modulo;
@@ -40,30 +35,18 @@ public class Leccion {
     @Column(nullable = false)
     private TipoLeccion tipo = TipoLeccion.TEORIA;
 
-    // Para TEORIA: el texto explicativo y un ejemplo de código Python (opcional).
     @Column(columnDefinition = "text")
     private String contenido;
 
     @Column(name = "ejemplo_codigo", columnDefinition = "text")
     private String ejemploCodigo;
 
-    /**
-     * Para EJERCICIO: el reto que el alumno debe resolver.
-     *
-     * <p>Se queda como columna suelta a propósito: apunta al módulo <b>Retos</b>, y una
-     * foreign key entre esquemas soldaría los dos módulos en la base de datos, que es
-     * justo lo que el ADR-03 evita. La resolución va por {@code RetosApi}.
-     */
     @Column(name = "reto_id")
     private Long retoId;
 
     @Column(name = "orden", nullable = false)
     private int orden;
 
-    /**
-     * Lado <b>uno</b> de la relación con {@link ProgresoLeccion}: una lección acumula el
-     * avance de varios alumnos. Si se borra la lección, su avance se va con ella.
-     */
     @OneToMany(mappedBy = "leccion", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ProgresoLeccion> progresos = new ArrayList<>();
 

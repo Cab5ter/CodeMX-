@@ -1,14 +1,5 @@
-// Conexión al canal de tiempo real del modo 1 vs 1.
-//
-// El backend expone un WebSocket en /api/hub/duelos con un protocolo JSON simétrico:
-// { target, arguments }. Esta función lo envuelve en una superficie pequeña —
-// on / onclose / start / stop / invoke — para que los componentes no hablen del
-// protocolo ni del transporte.
-//
-// La URL es relativa, así que pasa por el proxy de Vite (que tiene ws: true) hacia el
-// backend en :8080 — funciona igual desde localhost o desde otra máquina de la red.
 export function crearConexionDuelos() {
-  const handlers = new Map()   // target -> [callback]
+  const handlers = new Map()
   const alCerrar = []
   let socket = null
   let cerradaPorNosotros = false
@@ -19,14 +10,12 @@ export function crearConexionDuelos() {
   }
 
   return {
-    /** Registra un callback para un evento que emite el servidor. */
     on(target, callback) {
       const lista = handlers.get(target) ?? []
       lista.push(callback)
       handlers.set(target, lista)
     },
 
-    /** Se dispara si el servidor cierra la conexión (no al llamar a stop()). */
     onclose(callback) {
       alCerrar.push(callback)
     },
@@ -48,7 +37,6 @@ export function crearConexionDuelos() {
             return
           }
           const lista = handlers.get(sobre.target) ?? []
-          // El servidor manda 0 o 1 argumento por evento (igual que el hub anterior).
           for (const callback of lista) callback(...(sobre.arguments ?? []))
         }
 
@@ -60,11 +48,6 @@ export function crearConexionDuelos() {
       })
     },
 
-    /**
-     * Invoca un método del servidor. No espera confirmación: el servidor responde
-     * siempre por un evento (ResultadoEnvio, DueloIniciado, …), así que la promesa
-     * sólo refleja que el mensaje salió.
-     */
     invoke(target, ...args) {
       return new Promise((resolve, reject) => {
         if (!socket || socket.readyState !== WebSocket.OPEN) {

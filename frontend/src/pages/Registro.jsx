@@ -27,7 +27,7 @@ export default function Registro() {
     try {
       const u = await registrarUsuario(form)
       setUsuario(u)
-      guardarSesion(u)   // inicia sesión y avisa al navbar
+      guardarSesion(u)
     } catch {
       setError('No se pudo crear la cuenta. ¿El correo ya está registrado?')
     } finally {
@@ -60,7 +60,6 @@ export default function Registro() {
 
   return (
     <div className="grid lg:grid-cols-2 gap-12 items-start pt-4">
-      {/* Lado izquierdo */}
       <div>
         <div className="flex items-center gap-2 mb-4">
           <span className="h-px w-8 bg-emerald-500" />
@@ -83,7 +82,6 @@ export default function Registro() {
         </div>
       </div>
 
-      {/* Formulario */}
       <div className="bg-gray-900 border border-gray-800 rounded-2xl p-7">
         <h2 className="text-lg font-semibold text-white mb-5">Crear cuenta</h2>
 

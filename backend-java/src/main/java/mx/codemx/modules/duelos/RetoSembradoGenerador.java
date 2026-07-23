@@ -8,10 +8,6 @@ import mx.codemx.modules.retos.Reto;
 import mx.codemx.modules.retos.RetosApi;
 import org.springframework.stereotype.Component;
 
-/**
- * Respaldo sin IA: arma el problema del duelo a partir de un reto ya sembrado en la base
- * y sus casos de prueba. Permite que el modo 1 vs 1 funcione aunque no haya ANTHROPIC_API_KEY.
- */
 @Component
 public class RetoSembradoGenerador implements GeneradorProblemas {
 
@@ -28,7 +24,6 @@ public class RetoSembradoGenerador implements GeneradorProblemas {
             throw new IllegalStateException("No hay retos sembrados para generar un duelo.");
         }
 
-        // Prefiere retos de la dificultad pedida; si no hay (p. ej. AVANZADO sin sembrar), usa cualquiera.
         List<Reto> candidatos = todos.stream()
                 .filter(r -> r.getDificultad() == dificultad)
                 .toList();

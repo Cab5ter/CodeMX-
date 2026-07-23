@@ -15,24 +15,11 @@ import mx.codemx.modules.envios.EnviosApi;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/**
- * Módulo Cursos: organiza el aprendizaje en módulos con lecciones de teoría y ejercicios.
- *
- * <p>Reglas:
- * <ul>
- *   <li>Una lección de TEORIA se completa cuando el alumno la marca como leída.</li>
- *   <li>Una lección de EJERCICIO se completa cuando el alumno obtiene ACEPTADO en su reto
- *       (se consulta al módulo Envíos vía EnviosApi, sin duplicar estado).</li>
- *   <li>El examen se desbloquea al completar al menos UMBRAL_EXAMEN % de las lecciones.</li>
- * </ul>
- */
 @Service
 @Transactional
 public class CursoService implements CursosApi {
 
-    /** % de lecciones para desbloquear el examen. */
     public static final int UMBRAL_EXAMEN = 70;
-    /** % de aciertos para aprobar. */
     public static final int UMBRAL_APROBACION = 70;
 
     private final ModuloRepository modulos;
@@ -99,7 +86,6 @@ public class CursoService implements CursosApi {
         Leccion l = lecciones.findById(leccionId)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Lección no encontrada"));
 
-        // La relación evita la consulta extra: el módulo se navega desde la propia lección.
         Modulo m = l.getModulo();
 
         return new LeccionDetalle(l.getId(), m.getId(), m.getTitulo(), l.getTitulo(), l.getTipo(),
@@ -154,7 +140,6 @@ public class CursoService implements CursosApi {
         return new ResultadoExamen(aciertos, total, porcentaje, porcentaje >= UMBRAL_APROBACION);
     }
 
-    // ---- helpers ----
 
     private void exigirExamenDesbloqueado(long moduloId, long usuarioId) {
         if (!obtenerModulo(moduloId, usuarioId).examenDesbloqueado()) {

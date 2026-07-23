@@ -8,17 +8,6 @@ import mx.codemx.modules.evaluacion.SolicitudEvaluacion;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/**
- * Implementación del módulo Envíos. Coordina el flujo de un envío:
- * <ol>
- *   <li>Guarda el envío como PENDIENTE.</li>
- *   <li>Pide la evaluación al módulo Evaluación (EvaluacionApi).</li>
- *   <li>Actualiza el veredicto.</li>
- *   <li>Si es el primer ACEPTADO del usuario en ese reto, <b>publica el evento</b> a los
- *       observadores registrados (patrón Observer). Envíos ya no conoce a Ranking: sólo
- *       notifica; quien quiera reaccionar se suscribe como {@link EnvioObserver}.</li>
- * </ol>
- */
 @Service
 @Transactional
 public class EnvioService implements EnviosApi {

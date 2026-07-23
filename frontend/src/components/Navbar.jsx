@@ -6,7 +6,6 @@ export default function Navbar() {
   const [sesion, setSesion] = useState(getSesion())
   const navigate = useNavigate()
 
-  // Se mantiene al día cuando entras o sales (evento 'sesion') o cambia otra pestaña ('storage').
   useEffect(() => {
     const refrescar = () => setSesion(getSesion())
     window.addEventListener('sesion', refrescar)

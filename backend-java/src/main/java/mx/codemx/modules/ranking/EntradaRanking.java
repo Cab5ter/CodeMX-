@@ -8,7 +8,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.time.Instant;
 
-/** Entrada de la tabla de posiciones de un usuario. */
 @Entity
 @Table(name = "ranking", schema = "ranking")
 public class EntradaRanking {

@@ -6,11 +6,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import org.springframework.stereotype.Service;
 
-/**
- * Servicio singleton que gestiona la cola de emparejamiento y los duelos activos en memoria.
- * El monolito corre en una sola instancia, así que un estado en memoria con bloqueo basta.
- * El emparejamiento sólo junta a jugadores que eligieron la <b>misma dificultad</b>.
- */
 @Service
 public class MatchmakingService {
 
@@ -18,13 +13,8 @@ public class MatchmakingService {
     private final List<JugadorEnEspera> espera = new ArrayList<>();
     private final Map<Long, DueloActivo> activos = new ConcurrentHashMap<>();
 
-    /**
-     * Mete al jugador a la sala de espera; si ya había alguien (distinto, misma dificultad)
-     * esperando, lo empareja y devuelve al rival. Devuelve {@code null} si quedó en espera.
-     */
     public JugadorEnEspera emparejarOEncolar(JugadorEnEspera jugador) {
         synchronized (lock) {
-            // Evita duplicados de la misma conexión o usuario en la cola.
             espera.removeIf(j -> j.connectionId().equals(jugador.connectionId())
                     || j.usuarioId() == jugador.usuarioId());
 
@@ -33,12 +23,12 @@ public class MatchmakingService {
                 if (candidato.usuarioId() != jugador.usuarioId()
                         && candidato.dificultad() == jugador.dificultad()) {
                     espera.remove(i);
-                    return candidato; // emparejado
+                    return candidato;
                 }
             }
 
             espera.add(jugador);
-            return null; // en espera
+            return null;
         }
     }
 
@@ -54,10 +44,6 @@ public class MatchmakingService {
         activos.remove(dueloId);
     }
 
-    /**
-     * Saca una conexión de la cola y/o de su duelo activo (al desconectarse). Devuelve el
-     * duelo activo y aún no terminado en el que estaba, para que el handler avise al rival.
-     */
     public DueloActivo quitarConexion(String connectionId) {
         synchronized (lock) {
             espera.removeIf(j -> j.connectionId().equals(connectionId));

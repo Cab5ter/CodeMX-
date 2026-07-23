@@ -83,7 +83,6 @@ export default function DetalleReto() {
 
       <div className="grid lg:grid-cols-2 gap-6 items-start">
 
-        {/* Panel izquierdo: enunciado */}
         <div className="space-y-5">
           <div>
             <div className="flex items-center gap-3 mb-3">
@@ -112,7 +111,6 @@ export default function DetalleReto() {
           )}
         </div>
 
-        {/* Panel derecho: editor */}
         <div className="space-y-3">
           <div className="flex items-center gap-3 bg-gray-900 border border-gray-800 rounded-xl px-4 py-3">
             <span className="text-gray-500 text-sm">ID de usuario:</span>

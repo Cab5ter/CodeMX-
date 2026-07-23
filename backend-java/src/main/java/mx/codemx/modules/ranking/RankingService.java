@@ -11,10 +11,6 @@ import mx.codemx.modules.usuarios.UsuariosApi;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/**
- * Implementación del módulo Ranking. Consulta los puntos del reto al módulo Retos y el
- * nombre de cada jugador al módulo Usuarios, siempre por sus interfaces públicas.
- */
 @Service
 @Transactional
 public class RankingService implements RankingApi {

@@ -16,7 +16,6 @@ export default function Cursos() {
 
   return (
     <div>
-      {/* Hero */}
       <div className="mb-10 py-8 border-b border-gray-800">
         <div className="flex items-center gap-2 mb-3">
           <span className="h-px w-8 bg-emerald-500" />

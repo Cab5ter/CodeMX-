@@ -15,7 +15,6 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
-/** Entidad de dominio del módulo Retos. */
 @Entity
 @Table(name = "retos", schema = "retos")
 public class    Reto {
@@ -37,19 +36,6 @@ public class    Reto {
     @Column(name = "creado_en", nullable = false)
     private Instant creadoEn = Instant.now();
 
-    /**
-     * Lado <b>uno</b> de la relación uno&nbsp;a&nbsp;muchos con {@link CasoPrueba}: un reto
-     * tiene varios casos de prueba y cada caso pertenece a un solo reto.
-     *
-     * <p>{@code mappedBy = "reto"} indica que el dueño de la relación es {@code CasoPrueba}
-     * (es quien guarda la columna {@code reto_id}); aquí sólo se navega. Con
-     * {@code cascade = ALL} y {@code orphanRemoval} los casos se guardan y se borran junto
-     * con su reto, en vez de quedar huérfanos en la tabla.
-     *
-     * <p>Es {@code LAZY} por defecto: no se carga si nadie la pide, y nunca se serializa
-     * hacia el cliente porque el gateway expone {@code RetoDominio}, que no la incluye —
-     * publicarla revelaría las salidas esperadas de cada reto.
-     */
     @OneToMany(mappedBy = "reto", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("id ASC")
     private List<CasoPrueba> casos = new ArrayList<>();
@@ -102,12 +88,6 @@ public class    Reto {
         this.casos = casos;
     }
 
-    /**
-     * Añade un caso manteniendo los dos extremos sincronizados. En una relación
-     * bidireccional Hibernate persiste la columna {@code reto_id} desde el lado dueño
-     * ({@code CasoPrueba.reto}); si sólo se agregara a la lista, el caso se guardaría
-     * con la clave foránea en nulo.
-     */
     public void agregarCaso(CasoPrueba caso) {
         casos.add(caso);
         caso.setReto(this);

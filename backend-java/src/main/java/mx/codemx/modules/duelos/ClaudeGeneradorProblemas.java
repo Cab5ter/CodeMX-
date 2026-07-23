@@ -15,21 +15,11 @@ import mx.codemx.modules.retos.Dificultad;
 import org.springframework.stereotype.Component;
 import tools.jackson.databind.ObjectMapper;
 
-/**
- * Genera el problema del duelo con Claude (SDK oficial de Java, modelo claude-opus-4-8).
- * Claude inventa el reto, su solución de referencia y los casos de prueba; la corrección
- * se decide después ejecutando el código de cada jugador contra esos casos (motor Python),
- * así que la revisión es determinista y no depende de una nota subjetiva del modelo.
- *
- * <p>Requiere la variable de entorno ANTHROPIC_API_KEY. Si no está o la llamada falla,
- * {@link GeneradorProblemasConRespaldo} recurre automáticamente al respaldo.
- */
 @Component
 public class ClaudeGeneradorProblemas implements GeneradorProblemas {
 
     private static final String MODELO = "claude-opus-4-8";
 
-    /** Temas para variar los duelos en cada partida. */
     private static final List<String> TEMAS = List.of(
             "cadenas de texto", "matemática básica", "arreglos y listas", "lógica condicional",
             "ciclos y conteo", "ordenamiento simple", "búsqueda", "geometría sencilla",
@@ -63,7 +53,6 @@ public class ClaudeGeneradorProblemas implements GeneradorProblemas {
                 - No incluyas la solución ni explicaciones, sólo el JSON.\
                 """.formatted(estilo.nivel(), tema, estilo.formato(), estilo.reglaCasos());
 
-        // El cliente lee ANTHROPIC_API_KEY del entorno automáticamente.
         AnthropicClient client = AnthropicOkHttpClient.fromEnv();
 
         MessageCreateParams params = MessageCreateParams.builder()
@@ -81,10 +70,6 @@ public class ClaudeGeneradorProblemas implements GeneradorProblemas {
         return parsear(texto);
     }
 
-    /**
-     * El nivel cambia el ESTILO del problema, no sólo el adjetivo: el "fácil" para un
-     * principiante no usa entrada estándar (solo print y variables); eso se aprende después.
-     */
     private static Estilo estiloDe(Dificultad dificultad) {
         return switch (dificultad) {
             case BASICO -> new Estilo(
@@ -104,7 +89,6 @@ public class ClaudeGeneradorProblemas implements GeneradorProblemas {
         };
     }
 
-    /** Extrae el objeto JSON de la respuesta y lo convierte en un ProblemaDuelo. */
     private ProblemaDuelo parsear(String texto) {
         int inicio = texto.indexOf('{');
         int fin = texto.lastIndexOf('}');
@@ -143,7 +127,6 @@ public class ClaudeGeneradorProblemas implements GeneradorProblemas {
     private record Estilo(String nivel, String formato, String reglaCasos) {
     }
 
-    // DTOs sólo para deserializar la respuesta de Claude.
     @JsonIgnoreProperties(ignoreUnknown = true)
     private static final class ProblemaDto {
         public String titulo;

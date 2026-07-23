@@ -6,12 +6,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
-/**
- * Orquestador registrado como {@link GeneradorProblemas} principal. Decide la fuente del
- * problema: si hay ANTHROPIC_API_KEY usa Claude y, ante cualquier fallo (sin key, error de
- * red, JSON inválido), recurre al respaldo de retos sembrados. Así el duelo nunca se queda
- * sin problema y la IA se activa sola cuando configuras la key.
- */
 @Component
 @Primary
 public class GeneradorProblemasConRespaldo implements GeneradorProblemas {

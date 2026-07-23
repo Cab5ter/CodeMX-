@@ -14,18 +14,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-/**
- * Gateway / API REST → módulo Usuarios.
- *
- * <p>Expone {@link UsuarioDominio} (POJO sin JPA), nunca la entidad: el mapeador de
- * MapStruct traduce en la frontera, así la estructura de la tabla no se filtra al contrato.
- */
 @RestController
 @RequestMapping("/api/usuarios")
 @Tag(name = "Usuarios")
 public class UsuariosController {
 
-    /** Credenciales para iniciar sesión. */
     public record CredencialesLogin(String email, String passwordHash) {
     }
 
@@ -55,7 +48,6 @@ public class UsuariosController {
         return mapper.toDominio(usuarios.guardar(mapper.toEntity(usuario)));
     }
 
-    /** Inicia sesión validando correo + contraseña. */
     @PostMapping("/login")
     public ResponseEntity<UsuarioDominio> login(@RequestBody CredencialesLogin credenciales) {
         return usuarios.autenticar(credenciales.email(), credenciales.passwordHash())

@@ -11,7 +11,6 @@ const VEREDICTO = {
   TARDE:                  { text: 'text-gray-400',    icono: '⏳', label: '¡Tu rival se adelantó!' },
 }
 
-// Dificultades y los puntos en juego. Debe coincidir con DueloService.PuntosPorDificultad del backend.
 const DIFICULTADES = [
   { id: 'BASICO',     label: 'Fácil',      ganar: 15, perder: 5,  style: 'emerald' },
   { id: 'INTERMEDIO', label: 'Intermedio', ganar: 25, perder: 10, style: 'amber'   },
@@ -28,14 +27,14 @@ export default function Versus() {
   const [usuarioId] = useState(() => localStorage.getItem('usuarioId') ?? '')
   const nombre = localStorage.getItem('nombre') || (usuarioId ? `Usuario #${usuarioId}` : 'Invitado')
 
-  const [fase, setFase] = useState('inicio')        // inicio | buscando | enDuelo | terminado
+  const [fase, setFase] = useState('inicio')
   const [dificultad, setDificultad] = useState('INTERMEDIO')
-  const [duelo, setDuelo] = useState(null)          // { dueloId, titulo, enunciado, puntosGanar... }
-  const [rival, setRival] = useState(null)          // { id, nombre }
+  const [duelo, setDuelo] = useState(null)
+  const [rival, setRival] = useState(null)
   const [codigo, setCodigo] = useState('')
   const [miResultado, setMiResultado] = useState(null)
   const [enviando, setEnviando] = useState(false)
-  const [resultadoFinal, setResultadoFinal] = useState(null)  // { ganadorId, ganadorNombre, motivo }
+  const [resultadoFinal, setResultadoFinal] = useState(null)
   const [error, setError] = useState(null)
 
   const [mensajes, setMensajes] = useState([])
@@ -62,9 +61,9 @@ export default function Versus() {
     setMiResultado(null)
     setMensajes([])
     setCodigo('')
-    setFase('buscando')   // optimista: evita la carrera con DueloIniciado al emparejar
+    setFase('buscando')
 
-    await conexion.current?.stop()   // cierra una conexión anterior (p. ej. "Otro duelo")
+    await conexion.current?.stop()
     const con = crearConexionDuelos()
     conexion.current = con
 
@@ -105,8 +104,6 @@ export default function Versus() {
 
     try {
       await con.start()
-      // No tocar la fase después del invoke: para quien dispara el match, el evento
-      // DueloIniciado ya puso 'enDuelo' mientras este invoke seguía pendiente.
       await con.invoke('BuscarDuelo', miId, nombre, dificultad)
     } catch {
       setError('No se pudo conectar al servidor de duelos.')
@@ -131,7 +128,7 @@ export default function Versus() {
     const texto = chatTexto.trim()
     if (!texto || !duelo) return
     setChatTexto('')
-    try { await conexion.current.invoke('EnviarMensaje', duelo.dueloId, miId, texto) } catch { /* noop */ }
+    try { await conexion.current.invoke('EnviarMensaje', duelo.dueloId, miId, texto) } catch {  }
   }
 
   function alEscribir(e) {
@@ -144,7 +141,6 @@ export default function Versus() {
     setFase('inicio'); setDuelo(null); setRival(null); setResultadoFinal(null); setMiResultado(null)
   }
 
-  // ---------- Pantallas ----------
 
   if (fase === 'inicio' || fase === 'buscando') {
     return (
@@ -220,7 +216,6 @@ export default function Versus() {
 
   return (
     <div className="grid lg:grid-cols-2 gap-6 items-start">
-      {/* Izquierda: enunciado + rival + chat */}
       <div className="space-y-5">
         <div className="flex items-center justify-between bg-gray-900 border border-gray-800 rounded-xl px-4 py-3">
           <div className="flex items-center gap-2">
@@ -267,7 +262,6 @@ export default function Versus() {
           </div>
         )}
 
-        {/* Chat */}
         <div className="bg-gray-900 border border-gray-800 rounded-xl flex flex-col h-64">
           <div className="px-4 py-2.5 border-b border-gray-800 text-xs text-gray-500 uppercase tracking-wider">Chat</div>
           <div className="flex-1 overflow-y-auto px-4 py-3 space-y-2">
@@ -299,7 +293,6 @@ export default function Versus() {
         </div>
       </div>
 
-      {/* Derecha: editor + resultado */}
       <div className="space-y-3">
         <EditorCodigo value={codigo} onChange={setCodigo} />
 
