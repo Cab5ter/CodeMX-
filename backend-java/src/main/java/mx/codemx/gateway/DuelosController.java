@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 import mx.codemx.modules.duelos.Duelo;
 import mx.codemx.modules.duelos.DuelosApi;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -21,7 +22,7 @@ public class DuelosController {
     }
 
     @GetMapping("/usuario/{usuarioId}")
-    public List<Duelo> historial(@PathVariable long usuarioId) {
-        return duelos.historial(usuarioId);
+    public ResponseEntity<List<Duelo>> historial(@PathVariable long usuarioId) {
+        return ResponseEntity.ok(duelos.historial(usuarioId));
     }
 }

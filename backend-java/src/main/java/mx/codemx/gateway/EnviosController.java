@@ -1,6 +1,7 @@
 package mx.codemx.gateway;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
+import java.net.URI;
 import java.util.List;
 import mx.codemx.modules.envios.Envio;
 import mx.codemx.modules.envios.EnviosApi;
@@ -24,8 +25,9 @@ public class EnviosController {
     }
 
     @PostMapping
-    public Envio enviar(@RequestBody Envio envio) {
-        return envios.enviar(envio);
+    public ResponseEntity<Envio> enviar(@RequestBody Envio envio) {
+        Envio creado = envios.enviar(envio);
+        return ResponseEntity.created(URI.create("/api/envios/" + creado.getId())).body(creado);
     }
 
     @GetMapping("/{id}")
@@ -36,12 +38,12 @@ public class EnviosController {
     }
 
     @GetMapping("/usuario/{usuarioId}")
-    public List<Envio> porUsuario(@PathVariable long usuarioId) {
-        return envios.listarPorUsuario(usuarioId);
+    public ResponseEntity<List<Envio>> porUsuario(@PathVariable long usuarioId) {
+        return ResponseEntity.ok(envios.listarPorUsuario(usuarioId));
     }
 
     @GetMapping("/reto/{retoId}")
-    public List<Envio> porReto(@PathVariable long retoId) {
-        return envios.listarPorReto(retoId);
+    public ResponseEntity<List<Envio>> porReto(@PathVariable long retoId) {
+        return ResponseEntity.ok(envios.listarPorReto(retoId));
     }
 }

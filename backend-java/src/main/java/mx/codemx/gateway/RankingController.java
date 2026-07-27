@@ -23,8 +23,8 @@ public class RankingController {
     }
 
     @GetMapping
-    public List<EntradaRankingDto> obtener() {
-        return ranking.obtenerRankingConNombres();
+    public ResponseEntity<List<EntradaRankingDto>> obtener() {
+        return ResponseEntity.ok(ranking.obtenerRankingConNombres());
     }
 
     @GetMapping("/usuario/{usuarioId}")
