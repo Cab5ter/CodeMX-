@@ -36,3 +36,4 @@ logging:
 evaluador:
   url: http://localhost:8000
   timeout-ms: 5000
+  limite-caracteres: 20000
