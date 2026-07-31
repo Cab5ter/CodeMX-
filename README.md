@@ -315,6 +315,10 @@ diagramas están escritos en **Mermaid** (GitHub los renderiza automáticamente)
 describe el sistema con *zoom* progresivo: Nivel 1 (contexto) → Nivel 2 (contenedores)
 → Nivel 3 (componentes).
 
+> **Actualizado al 30/07/2026**, tras el despliegue público (ADR-08) y el cambio en el
+> manejo de credenciales (ADR-07). Los diagramas reflejan lo que corre en producción, no
+> un diseño ideal: donde la realidad desplegada difiere de la intención original, se marca.
+
 ## Nivel 1 — Contexto
 
 > **¿Para quién es?** Para cualquiera, incluidos no técnicos (profesores, evaluadores).
@@ -323,24 +327,31 @@ describe el sistema con *zoom* progresivo: Nivel 1 (contexto) → Nivel 2 (conte
 
 ```mermaid
 flowchart LR
-    est(["👤 Estudiante universitario"])
-    codemx["<b>CodeMX</b><br/><i>Plataforma web de retos y cursos en español</i>"]
-    pyeval["Servicio Evaluador Python<br/><i>ejecuta el código contra casos de prueba</i>"]
+    est(["👤 Estudiante universitario<br/><i>navegador de escritorio o teléfono</i>"])
+    codemx["<b>CodeMX</b><br/><i>Plataforma web de retos y cursos en español</i><br/>desplegada en Render · HTTPS pública"]
+    pyeval["Servicio Evaluador Python<br/><i>ejecuta el código contra casos de prueba</i><br/><b>no desplegado en producción</b>"]
     claude["Anthropic Claude API<br/><i>genera problemas de duelo</i>"]
 
     est -->|"resuelve retos y toma cursos · HTTPS"| codemx
-    codemx -->|"envía código a evaluar · HTTP/JSON"| pyeval
+    codemx -.->|"evaluaría los envíos · HTTP/JSON"| pyeval
     codemx -->|"solicita generar un problema · SDK"| claude
 
     classDef sys fill:#1168bd,stroke:#0b4884,color:#fff;
     classDef ext stroke-dasharray:4 4;
+    classDef off stroke-dasharray:4 4,color:#888;
     class codemx sys;
-    class pyeval,claude ext;
+    class claude ext;
+    class pyeval off;
 ```
 
-**Lectura:** el único usuario es el **estudiante**. CodeMX se apoya en dos sistemas
-externos: el **evaluador Python** (decide si el código pasa los casos de prueba) y la
-**API de Claude** (inventa los problemas de los duelos).
+**Lectura:** el único usuario es el **estudiante**, que ahora entra desde cualquier red y
+cualquier dispositivo gracias al despliegue público. CodeMX se apoya en dos sistemas
+externos: el **evaluador Python** y la **API de Claude** (inventa los problemas de los
+duelos).
+
+**Diferencia con producción:** el evaluador Python **no está desplegado** (ADR-08). En la
+demo actúa la estrategia local de respaldo, que ejecuta el código dentro del propio
+contenedor — es el riesgo **R-03** de la [evaluación ATAM](ATAM-CodeMX.md).
 
 ## Nivel 2 — Contenedores
 
@@ -351,32 +362,46 @@ externos: el **evaluador Python** (decide si el código pasa los casos de prueba
 
 ```mermaid
 flowchart TB
-    est(["👤 Estudiante"])
+    est(["👤 Estudiante<br/><i>escritorio o teléfono</i>"])
 
-    subgraph codemx["CodeMX"]
-        spa["SPA Frontend<br/><i>React 18 + Vite 5 + Tailwind</i>"]
-        api["API REST<br/><i>ASP.NET Core .NET 10 · monolito modular</i>"]
-        db[("Base de datos<br/><i>PostgreSQL · EF Core / Npgsql</i>")]
+    subgraph render["Render · plan gratuito"]
+        subgraph imagen["Servicio web · una sola imagen Docker"]
+            api["<b>API REST + estáticos</b><br/><i>ASP.NET Core .NET 10 · monolito modular</i><br/>sirve wwwroot y expone /api"]
+            spa["<b>SPA Frontend</b><br/><i>React 18 + Vite 5 + Tailwind</i><br/>build estático servido desde wwwroot"]
+            py["<i>python3</i><br/>subproceso que ejecuta<br/>el código del estudiante"]
+        end
+        db[("Base de datos<br/><i>PostgreSQL 16 administrado</i><br/>un esquema por módulo")]
     end
 
-    pyeval["Evaluador Python"]
     claude["Anthropic Claude API"]
+    pyeval["Evaluador Python<br/><b>no desplegado</b>"]
 
-    est -->|"HTTPS"| spa
-    spa -->|"datos · REST HTTP/JSON (/api/*)"| api
-    spa -.->|"duelos en tiempo real · WebSocket (SignalR)"| api
-    api -->|"lee/escribe · EF Core"| db
-    api -->|"evalúa envíos · HTTP/JSON"| pyeval
+    est -->|"carga la interfaz · HTTPS"| api
+    api --- spa
+    est -->|"datos · REST HTTP/JSON (/api/*)"| api
+    est -.->|"duelos en tiempo real · WebSocket (SignalR)"| api
+    api -->|"lee/escribe · EF Core / Npgsql"| db
+    api -->|"lanza subproceso"| py
+    api -.->|"evaluaría · HTTP/JSON"| pyeval
     api -->|"genera problemas · SDK"| claude
 
     classDef ext stroke-dasharray:4 4;
-    class pyeval,claude ext;
+    classDef off stroke-dasharray:4 4,color:#888;
+    class claude ext;
+    class pyeval off;
 ```
 
-**Lectura:** son **tres contenedores propios**. El **SPA de React** solo pinta la interfaz
-y llama al backend por el proxy `/api`. La **API .NET** concentra la lógica y habla con la
-**base PostgreSQL** (EF Core), el **evaluador Python** (HTTP) y la **API de Claude** (SDK).
-Los duelos usan un canal aparte en **tiempo real (SignalR/WebSocket)**, no REST.
+**Lectura:** en producción hay **un solo contenedor propio más la base de datos**. El build
+del SPA de React viaja **dentro de la misma imagen** que la API, servido desde `wwwroot`
+(ADR-08): mismo origen, sin CORS y sin posibilidad de que frontend y API queden
+desincronizados. Las rutas relativas `/api` del cliente funcionan igual que con el proxy de
+Vite en desarrollo. Los duelos usan un canal aparte en **tiempo real (SignalR/WebSocket)**,
+no REST.
+
+**Cambio respecto a la versión anterior del diagrama:** antes el SPA y la API figuraban como
+dos contenedores separados. Siguen siendo dos *piezas de desarrollo* —y en local se ejecutan
+por separado, Vite en `:5173` y la API en `:8080`— pero **un único contenedor desplegable**.
+Ese es el trade-off **TO-02** del ATAM.
 
 ## Nivel 3 — Componentes (dentro de la API REST)
 
@@ -396,7 +421,7 @@ flowchart TB
             hub["DueloHub + MatchmakingService<br/><i>SignalR</i>"]
         end
         subgraph dominio["Módulos de dominio · I…Api → Service → Repository"]
-            usuarios["Usuarios"]
+            usuarios["Usuarios<br/><i>BCrypt · entidad ≠ DTO</i>"]
             retos["Retos"]
             cursos["Cursos"]
             envios["Envíos<br/><i>Subject (Observer)</i>"]
@@ -407,16 +432,17 @@ flowchart TB
         subgraph patrones["Evaluación · Strategy + Factory Method"]
             factory["EvaluadorStrategyFactory<br/><i>Factory Method</i>"]
             stratR["EvaluacionRemotaStrategy<br/><i>Strategy</i>"]
-            stratL["EvaluacionLocalStrategy<br/><i>Strategy</i>"]
+            stratL["<b>EvaluacionLocalStrategy</b><br/><i>Strategy · activa en producción</i>"]
         end
         gen["GeneradorProblemas<br/><i>Strategy + fallback (Claude → sembrado)</i>"]
     end
 
     db[("PostgreSQL<br/><i>EF Core</i>")]
-    pyeval["Evaluador Python"]
+    pyeval["Evaluador Python<br/><b>no desplegado</b>"]
     claude["Claude API"]
+    py["python3<br/><i>subproceso local</i>"]
 
-    est -->|"REST"| gw
+    est -->|"REST · UsuarioDto, nunca el hash"| gw
     est -.->|"WebSocket"| hub
 
     gw --> usuarios & retos & cursos & envios & ranking
@@ -426,15 +452,18 @@ flowchart TB
     envios -.->|"IEnvioObserver · envío ACEPTADO"| ranking
     eval -->|"pide estrategia"| factory
     factory -->|"crea"| stratR
-    factory -->|"crea (fallback)"| stratL
-    stratR -->|"HTTP"| pyeval
+    factory -->|"crea (respaldo)"| stratL
+    stratR -.->|"HTTP"| pyeval
+    stratL -->|"Process.Start · timeout 5 s"| py
     duelos --> gen
     gen -->|"SDK"| claude
 
     dominio -->|"EF Core"| db
 
     classDef ext stroke-dasharray:4 4;
-    class pyeval,claude ext;
+    classDef off stroke-dasharray:4 4,color:#888;
+    class claude ext;
+    class pyeval off;
 ```
 
 **Lectura y patrones GoF:**
@@ -442,6 +471,9 @@ flowchart TB
 - **Módulos.** Cada módulo expone una **interfaz pública** (`I…Api`) y esconde su
   `Service` + `Repository`; los módulos se hablan solo por esas interfaces (monolito
   modular, ADR-03).
+- **Frontera de credenciales (ADR-07).** El módulo Usuarios recibe la contraseña en claro,
+  la hashea con BCrypt y **nunca deja salir el hash**: el gateway responde siempre con
+  `UsuarioDto`. Es la única parte del sistema que sabe cómo se almacena una credencial.
 - **Strategy** — `IEvaluacionStrategy` con dos implementaciones intercambiables:
   `EvaluacionRemotaStrategy` (evaluador Python) y `EvaluacionLocalStrategy` (respaldo). El
   mismo patrón aparece en Duelos con `IGeneradorProblemas` (Claude vs. sembrado).
@@ -451,6 +483,13 @@ flowchart TB
   por primera vez; `RankingEnvioObserver` está suscrito como `IEnvioObserver` y actualiza
   el ranking. Así **Envíos no conoce a Ranking** y podrían sumarse otros observadores
   (logros, notificaciones) sin tocar Envíos.
+
+**Qué estrategia corre en producción.** Como el evaluador Python no se desplegó, la que
+actúa es `EvaluacionLocalStrategy`: lanza `python3` como subproceso del propio backend, con
+un timeout de 5 segundos como única contención. El patrón Strategy hizo que ese respaldo
+entrara **sin tocar una línea** del resto del sistema — es el escenario E-05 del ATAM
+resuelto en la práctica. El precio es el riesgo **R-03**: se ejecuta código no confiable
+dentro del contenedor de una aplicación pública.
 
 ---
 

@@ -20,6 +20,18 @@ RUN dotnet publish backend/CodeMX.Api.csproj -c Release -o /app/publish /p:UseAp
 
 # --- Etapa 3: imagen de ejecución ---
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
+
+# EvaluacionLocalStrategy lanza un proceso `python3` para correr el código del estudiante.
+# La imagen base de ASP.NET no lo trae, y sin él la evaluación —la función central de la
+# plataforma— falla con ERROR_EN_EJECUCION. En producción esta es la estrategia activa,
+# porque el evaluador remoto en Python no se despliega (ADR-08).
+#
+# ADVERTENCIA: esto ejecuta código no confiable dentro del contenedor, con timeout como
+# única contención. Es el riesgo R-03 de la evaluación ATAM y sigue abierto.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends python3 \
+    && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
 COPY --from=backend /app/publish ./
 # El build de Vite se sirve como contenido estático desde la propia API.

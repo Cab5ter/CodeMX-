@@ -1,0 +1,33 @@
+# Infraestructura de la demo pública de CodeMX en Render (ADR-08).
+# Un solo servicio web construido desde el Dockerfile —la API sirve también el
+# frontend— más una base PostgreSQL administrada.
+#
+# Para levantarlo: en Render → New → Blueprint → apuntar a este repositorio.
+
+services:
+  - type: web
+    name: codemx
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: free
+    region: oregon
+    branch: main
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      # Render inyecta PORT; Program.cs lo lee y escucha ahí.
+      # DATABASE_URL llega en formato URI y se traduce a cadena de Npgsql al arrancar.
+      - key: DATABASE_URL
+        fromDatabase:
+          name: codemx-db
+          property: connectionString
+
+databases:
+  - name: codemx-db
+    databaseName: codemx_api
+    user: codemx
+    plan: free
+    region: oregon
