@@ -22,7 +22,7 @@ export default function Cursos() {
           <span className="h-px w-8 bg-emerald-500" />
           <span className="text-emerald-400 text-sm font-medium tracking-wide uppercase">Ruta de aprendizaje</span>
         </div>
-        <h1 className="text-4xl font-bold text-white mb-3 leading-tight">
+        <h1 className="text-3xl sm:text-4xl font-bold text-white mb-3 leading-tight">
           Aprende Python<br />
           <span className="bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
             paso a paso

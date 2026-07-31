@@ -68,7 +68,7 @@ export default function Examen() {
           {resultado.aprobado ? '¡Aprobaste!' : 'No alcanzó esta vez'}
         </h1>
         <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 my-6">
-          <p className={`text-5xl font-bold ${resultado.aprobado ? 'text-emerald-400' : 'text-amber-400'}`}>
+          <p className={`text-4xl sm:text-5xl font-bold ${resultado.aprobado ? 'text-emerald-400' : 'text-amber-400'}`}>
             {resultado.porcentaje}%
           </p>
           <p className="text-gray-400 mt-2">{resultado.aciertos} de {resultado.total} respuestas correctas</p>

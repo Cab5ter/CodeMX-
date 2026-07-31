@@ -28,7 +28,7 @@ export default function ModuloDetalle() {
 
       {/* Cabecera */}
       <div className="flex items-start gap-4 mb-6">
-        <span className="text-5xl">{modulo.icono}</span>
+        <span className="text-4xl sm:text-5xl">{modulo.icono}</span>
         <div className="flex-1">
           <h1 className="text-2xl font-bold text-white">{modulo.titulo}</h1>
           <p className="text-gray-400 text-sm mt-1">{modulo.descripcion}</p>

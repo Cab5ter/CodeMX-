@@ -150,7 +150,7 @@ export default function Versus() {
     return (
       <div className="max-w-xl mx-auto text-center pt-6">
         <div className="text-6xl mb-4">⚔️</div>
-        <h1 className="text-3xl font-bold text-white mb-2">
+        <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">
           Modo <span className="bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">1 vs 1</span>
         </h1>
         <p className="text-gray-400 mb-8">
@@ -219,7 +219,7 @@ export default function Versus() {
   const v = miResultado ? VEREDICTO[miResultado.veredicto] : null
 
   return (
-    <div className="grid lg:grid-cols-2 gap-6 items-start">
+    <div className="grid lg:grid-cols-2 gap-4 sm:gap-6 items-start">
       {/* Izquierda: enunciado + rival + chat */}
       <div className="space-y-5">
         <div className="flex items-center justify-between bg-gray-900 border border-gray-800 rounded-xl px-4 py-3">
@@ -255,7 +255,7 @@ export default function Versus() {
         </div>
 
         {(duelo?.ejemploEntrada || duelo?.ejemploSalida) && (
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-5 grid grid-cols-2 gap-3">
+          <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 sm:p-5 grid grid-cols-1 xs:grid-cols-2 gap-3">
             <div>
               <p className="text-xs text-gray-500 uppercase tracking-wider mb-1.5">Entrada</p>
               <pre className="bg-gray-950 border border-gray-800 rounded-lg px-3 py-2 text-sm text-gray-300 font-mono overflow-x-auto whitespace-pre-wrap">{duelo.ejemploEntrada}</pre>
@@ -330,7 +330,7 @@ export default function Versus() {
           </button>
         ) : (
           <div className={`rounded-2xl border p-6 text-center ${gane ? 'bg-emerald-500/10 border-emerald-500/40' : 'bg-red-500/10 border-red-500/40'}`}>
-            <div className="text-5xl mb-2">{gane ? '🏆' : '💪'}</div>
+            <div className="text-4xl sm:text-5xl mb-2">{gane ? '🏆' : '💪'}</div>
             <h2 className={`text-xl font-bold ${gane ? 'text-emerald-400' : 'text-red-400'}`}>
               {gane ? '¡Ganaste el duelo!' : `Ganó ${resultadoFinal?.ganadorNombre}`}
             </h2>

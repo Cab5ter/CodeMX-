@@ -14,9 +14,10 @@ import Versus from './pages/Versus'
 export default function App() {
   return (
     <BrowserRouter>
-      <div className="min-h-screen bg-gray-950 text-gray-100">
+      {/* overflow-x-hidden: ningún elemento ancho puede provocar scroll lateral en el teléfono */}
+      <div className="min-h-screen bg-gray-950 text-gray-100 overflow-x-hidden">
         <Navbar />
-        <main className="max-w-6xl mx-auto px-4 py-8">
+        <main className="max-w-6xl mx-auto px-4 py-5 sm:py-8">
           <Routes>
             <Route path="/" element={<Cursos />} />
             <Route path="/modulos/:id" element={<ModuloDetalle />} />

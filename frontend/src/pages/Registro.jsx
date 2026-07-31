@@ -45,7 +45,7 @@ export default function Registro() {
 
         <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 mb-6">
           <p className="text-gray-500 text-sm mb-1">Tu ID de usuario</p>
-          <p className="font-mono text-4xl font-bold text-emerald-400">#{usuario.id}</p>
+          <p className="font-mono text-3xl sm:text-4xl font-bold text-emerald-400">#{usuario.id}</p>
           <p className="text-gray-600 text-xs mt-2">Guarda este número — lo necesitas para enviar soluciones</p>
         </div>
 
@@ -60,14 +60,14 @@ export default function Registro() {
   }
 
   return (
-    <div className="grid lg:grid-cols-2 gap-12 items-start pt-4">
+    <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-start pt-4">
       {/* Lado izquierdo */}
       <div>
         <div className="flex items-center gap-2 mb-4">
           <span className="h-px w-8 bg-emerald-500" />
           <span className="text-emerald-400 text-sm font-medium tracking-wide uppercase">Gratis</span>
         </div>
-        <h1 className="text-3xl font-bold text-white mb-3 leading-snug">
+        <h1 className="text-2xl sm:text-3xl font-bold text-white mb-3 leading-snug">
           Únete a <span className="bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">CodeMX</span>
         </h1>
         <p className="text-gray-400 mb-8">

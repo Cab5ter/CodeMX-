@@ -34,7 +34,7 @@ export default function Login() {
         <span className="h-px w-8 bg-emerald-500" />
         <span className="text-emerald-400 text-sm font-medium tracking-wide uppercase">Bienvenido de vuelta</span>
       </div>
-      <h1 className="text-3xl font-bold text-white mb-2">Iniciar sesión</h1>
+      <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Iniciar sesión</h1>
       <p className="text-gray-400 mb-8">Entra con tu correo y contraseña para seguir compitiendo.</p>
 
       <div className="bg-gray-900 border border-gray-800 rounded-2xl p-7">

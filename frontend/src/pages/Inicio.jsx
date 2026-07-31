@@ -41,7 +41,7 @@ export default function Inicio() {
           <span className="h-px w-8 bg-emerald-500" />
           <span className="text-emerald-400 text-sm font-medium tracking-wide uppercase">Plataforma educativa</span>
         </div>
-        <h1 className="text-4xl font-bold text-white mb-3 leading-tight">
+        <h1 className="text-3xl sm:text-4xl font-bold text-white mb-3 leading-tight">
           Aprende a programar<br />
           <span className="bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
             resolviendo retos
@@ -52,7 +52,7 @@ export default function Inicio() {
         </p>
 
         {/* Stats */}
-        <div className="flex gap-8 mt-6">
+        <div className="flex flex-wrap gap-6 sm:gap-8 mt-6">
           {STATS.map(s => (
             <div key={s.label}>
               <div className="text-2xl font-bold text-white">{s.valor}</div>

@@ -65,7 +65,7 @@ export default function DetalleReto() {
     <div className="space-y-4">
       <div className="h-6 bg-gray-900 rounded animate-pulse w-32" />
       <div className="h-10 bg-gray-900 rounded animate-pulse w-2/3" />
-      <div className="grid lg:grid-cols-2 gap-6 mt-6">
+      <div className="grid lg:grid-cols-2 gap-4 sm:gap-6 mt-6">
         <div className="h-80 bg-gray-900 rounded-xl animate-pulse" />
         <div className="h-80 bg-gray-900 rounded-xl animate-pulse" />
       </div>
@@ -81,7 +81,7 @@ export default function DetalleReto() {
         ← Volver a retos
       </Link>
 
-      <div className="grid lg:grid-cols-2 gap-6 items-start">
+      <div className="grid lg:grid-cols-2 gap-4 sm:gap-6 items-start">
 
         {/* Panel izquierdo: enunciado */}
         <div className="space-y-5">
@@ -104,7 +104,7 @@ export default function DetalleReto() {
           {ejemplo && (
             <div className="bg-gray-900 border border-gray-800 rounded-xl p-5 space-y-4">
               <h2 className="text-xs text-gray-500 uppercase tracking-wider font-medium">Ejemplo</h2>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 xs:grid-cols-2 gap-3">
                 <BloqueCodigo titulo="Entrada" contenido={ejemplo.inputData} />
                 <BloqueCodigo titulo="Salida esperada" contenido={ejemplo.outputEsperado} />
               </div>
