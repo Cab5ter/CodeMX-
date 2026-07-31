@@ -10,6 +10,35 @@ estudiantes universitarios mexicanos (estilo SoloLearn). Permite resolver retos,
 evaluar el código contra casos de prueba, seguir cursos con lecciones y exámenes,
 y competir en un ranking.
 
+---
+
+## 🚀 Demo en vivo
+
+### **[https://codemx.onrender.com](https://codemx.onrender.com)**
+
+<img src="img/qr-demo.png" alt="Código QR de la demo de CodeMX" width="200" align="right" />
+
+Abierta desde cualquier dispositivo y cualquier red — **escanea el QR con la cámara del
+teléfono**. La interfaz está adaptada a pantallas de móvil.
+
+**Qué puedes probar:**
+
+- Crear una cuenta y entrar (la contraseña se hashea con BCrypt, ADR-07)
+- Resolver un reto: el código se ejecuta contra casos de prueba reales
+- Ver cómo tu envío aceptado sube al ranking automáticamente
+- Seguir un curso con lecciones y examen
+- Modo **1 vs 1** en tiempo real (abre la página en dos dispositivos)
+- El contrato de la API en **[/swagger](https://codemx.onrender.com/swagger)**
+
+> **Antes de abrirla:** el plan gratuito de Render suspende el servicio tras ~15 minutos sin
+> tráfico. El primer acceso puede tardar cerca de un minuto en despertar; los siguientes son
+> inmediatos. Es el trade-off **TO-01** de la [evaluación ATAM](ATAM-CodeMX.md).
+
+<br clear="right" />
+
+**Pipeline en vivo:** [pestaña Actions](https://github.com/Cab5ter/CodeMX-/actions) — cinco
+jobs, 31 pruebas, con la imagen Docker arrancada y verificada en cada push.
+
 ## Stack
 
 | Capa | Tecnología |

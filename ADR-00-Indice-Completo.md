@@ -89,9 +89,22 @@ la **[evaluación ATAM](ATAM-CodeMX.md)**.
 
 ---
 
+## Entregables
+
+| Entregable | Dónde |
+|------------|-------|
+| ADR completo (Unidad II → hoy) | Este índice + los 8 archivos `ADR-0X-*.md` |
+| C4 niveles 1 a 3, actualizados | [README](README.md#arquitectura--modelo-c4) |
+| Evaluación ATAM | [ATAM-CodeMX.md](ATAM-CodeMX.md) |
+| Demo en vivo | <https://codemx.onrender.com> · QR en `img/qr-demo.png` |
+| Pipeline CI visible, pruebas corriendo | [pestaña Actions](https://github.com/Cab5ter/CodeMX-/actions) — 5 jobs, 31 pruebas |
+
+---
+
 ## Cómo leer el resto de la documentación
 
-- **[README](README.md)** — stack, arranque, deuda técnica y los diagramas **C4 niveles 1 a 3**.
+- **[README](README.md)** — demo, stack, arranque, deuda técnica y los diagramas
+  **C4 niveles 1 a 3**.
 - **[ATAM-CodeMX.md](ATAM-CodeMX.md)** — evaluación de la arquitectura: escenarios, riesgos,
   trade-offs y puntos de sensibilidad.
 - **Vistas 4+1** — diagramas en `img/` (lógica, física, despliegue y procesos), referenciados

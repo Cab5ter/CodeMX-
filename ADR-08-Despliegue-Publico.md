@@ -75,6 +75,19 @@ a que `/health` de la demo responda. No hay despliegue manual.
 
 ---
 
+### Resultado
+
+La demo está publicada en **<https://codemx.onrender.com>**, con TLS gestionado por la
+plataforma y un código QR (`img/qr-demo.png`) que la abre desde cualquier teléfono.
+
+Verificado en producción el 30/07/2026: responden `/health`, las rutas de React Router
+(`/`, `/ranking`, `/vs`, `/ejercicios`), los endpoints de la API y Swagger. El flujo completo
+funciona de extremo a extremo —registro, login correcto (200) y con contraseña errónea (401),
+envío de una solución evaluada como `ACEPTADO` y actualización automática del ranking vía el
+Observer— y `GET /api/usuarios` no expone ningún hash.
+
+---
+
 ## Alternativas consideradas
 
 | Alternativa | Por qué la descarté |
