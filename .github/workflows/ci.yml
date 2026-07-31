@@ -1,21 +1,328 @@
 name: CI
+
+# Se dispara en cada push y en cada Pull Request: el check verde o rojo queda visible
+# en la pestaña Actions y dentro del propio PR (ADR-06).
 on:
   push:
+    branches: ['**']
   pull_request:
+  workflow_dispatch:
+
+env:
+  DOTNET_VERSION: '10.0.x'
+  NODE_VERSION: '20'
+  DOTNET_NOLOGO: true
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+
+# Un push nuevo sobre la misma rama cancela la ejecución anterior.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  build-and-test:
-    name: Build & Test (.NET)
+  # ────────────────────────────────────────────────────────────────
+  # 1. Backend: compila la solución completa y ejecuta las pruebas
+  # ────────────────────────────────────────────────────────────────
+  backend:
+    name: Backend · build y pruebas (.NET)
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Setup .NET
+      - uses: actions/checkout@v4
+
+      - name: Instalar .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '8.0.x'
-      - name: Restore
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Cachear paquetes NuGet
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj') }}
+          restore-keys: nuget-${{ runner.os }}-
+
+      - name: Restaurar
         run: dotnet restore CodeMX.sln
-      - name: Build
+
+      - name: Compilar
         run: dotnet build CodeMX.sln --configuration Release --no-restore
-      - name: Test
-        run: dotnet test CodeMX.sln --configuration Release --no-build --verbosity normal
+
+      - name: Ejecutar pruebas con cobertura
+        run: |
+          # Sin LogFileName fijo: con varios proyectos de prueba, un nombre común hace
+          # que el segundo .trx sobrescriba al primero y el resumen pierda la mitad.
+          dotnet test CodeMX.sln \
+            --configuration Release \
+            --no-build \
+            --logger trx \
+            --logger "console;verbosity=normal" \
+            --results-directory ./TestResults \
+            --collect:"XPlat Code Coverage"
+
+      - name: Resumen de pruebas y cobertura
+        if: always()
+        run: |
+          python3 - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import glob, xml.etree.ElementTree as ET
+
+          print("## Resultados de las pruebas\n")
+
+          total = passed = failed = skipped = 0
+          fallidas = []
+          for archivo in glob.glob("TestResults/**/*.trx", recursive=True):
+              raiz = ET.parse(archivo).getroot()
+              ns = {"t": "http://microsoft.com/schemas/VisualStudio/TeamTest/2010"}
+              contador = raiz.find("t:ResultSummary/t:Counters", ns)
+              if contador is None:
+                  continue
+              t = int(contador.get("total", 0))
+              p = int(contador.get("passed", 0))
+              f = int(contador.get("failed", 0))
+              total += t; passed += p; failed += f
+              skipped += t - p - f
+              for r in raiz.findall(".//t:UnitTestResult", ns):
+                  if r.get("outcome") == "Failed":
+                      fallidas.append(f"- `{r.get('testName')}`")
+
+          icono = "✅" if failed == 0 else "❌"
+          print(f"{icono} **{passed}/{total} pruebas pasaron** "
+                f"(fallidas: {failed}, omitidas: {skipped})\n")
+          if fallidas:
+              print("### Pruebas fallidas\n")
+              print("\n".join(fallidas) + "\n")
+
+          # Cobertura de línea a partir del reporte Cobertura que genera coverlet.
+          cubiertas = validas = 0
+          for archivo in glob.glob("TestResults/**/coverage.cobertura.xml", recursive=True):
+              raiz = ET.parse(archivo).getroot()
+              for clase in raiz.iter("class"):
+                  for linea in clase.iter("line"):
+                      validas += 1
+                      if int(linea.get("hits", 0)) > 0:
+                          cubiertas += 1
+          if validas:
+              pct = 100 * cubiertas / validas
+              print(f"## Cobertura\n\n**{pct:.1f}%** de líneas cubiertas "
+                    f"({cubiertas}/{validas})\n")
+          PY
+
+      - name: Guardar resultados de pruebas
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: resultados-pruebas
+          path: TestResults/
+          retention-days: 14
+
+  # ────────────────────────────────────────────────────────────────
+  # 2. Frontend: build de producción de React + Vite
+  # ────────────────────────────────────────────────────────────────
+  frontend:
+    name: Frontend · build (React + Vite)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Instalar Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Instalar dependencias
+        working-directory: frontend
+        run: npm ci
+
+      - name: Compilar
+        working-directory: frontend
+        run: npm run build
+
+      - name: Resumen del bundle
+        if: always()
+        working-directory: frontend
+        run: |
+          {
+            echo "## Bundle del frontend"
+            echo
+            echo "| Archivo | Tamaño |"
+            echo "|---------|--------|"
+            find dist -type f \( -name '*.js' -o -name '*.css' -o -name '*.html' \) \
+              -printf '| `%P` | %s bytes |\n' | sort
+            echo
+            echo "**Total:** $(du -sh dist | cut -f1)"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Guardar el build
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/dist/
+          retention-days: 14
+
+  # ────────────────────────────────────────────────────────────────
+  # 3. Imagen Docker: se construye y se comprueba que arranca de verdad
+  # ────────────────────────────────────────────────────────────────
+  docker:
+    name: Docker · build y arranque
+    runs-on: ubuntu-latest
+    needs: [backend, frontend]
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: codemx_api
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Construir la imagen
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          load: true
+          tags: codemx:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Arrancar el contenedor y comprobar la salud
+        run: |
+          docker run -d --name codemx --network host \
+            -e PORT=8080 \
+            -e ConnectionStrings__Postgres="Host=localhost;Port=5432;Database=codemx_api;Username=postgres;Password=postgres" \
+            codemx:${{ github.sha }}
+
+          # La sonda /health confirma que la app arrancó y alcanzó la base de datos.
+          for i in $(seq 1 45); do
+            curl -sf http://localhost:8080/health && break
+            sleep 2
+          done
+
+          echo "Comprobando las rutas principales…"
+          for ruta in /health /api/retos /api/ranking /api/cursos / /ranking /swagger/index.html; do
+            codigo=$(curl -s -o /dev/null -w '%{http_code}' "http://localhost:8080$ruta")
+            echo "  $ruta → $codigo"
+            [ "$codigo" = "200" ] || { echo "::error::$ruta devolvió $codigo"; docker logs codemx; exit 1; }
+          done
+
+      - name: Resumen de la imagen
+        if: always()
+        run: |
+          {
+            echo "## Imagen Docker"
+            echo
+            echo "- **Tag:** \`codemx:${{ github.sha }}\`"
+            echo "- **Tamaño:** $(docker image inspect codemx:${{ github.sha }} --format '{{.Size}}' | numfmt --to=iec)"
+            echo "- Rutas verificadas: \`/health\`, \`/api/retos\`, \`/api/ranking\`, \`/api/cursos\`, \`/\`, \`/ranking\`, \`/swagger\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Registro del contenedor si algo falló
+        if: failure()
+        run: docker logs codemx || true
+
+  # ────────────────────────────────────────────────────────────────
+  # 4. Dependencias: vulnerabilidades conocidas en NuGet y npm
+  # ────────────────────────────────────────────────────────────────
+  seguridad:
+    name: Seguridad · auditoría de dependencias
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Paquetes NuGet vulnerables
+        run: |
+          dotnet restore CodeMX.sln
+          {
+            echo "## Auditoría de dependencias"
+            echo
+            echo "### NuGet (.NET)"
+          } >> "$GITHUB_STEP_SUMMARY"
+          salida=$(dotnet list CodeMX.sln package --vulnerable --include-transitive 2>&1)
+          echo "$salida"
+          if echo "$salida" | grep -q "no vulnerable packages"; then
+            echo "✅ Sin paquetes vulnerables conocidos." >> "$GITHUB_STEP_SUMMARY"
+          else
+            {
+              echo '```'
+              echo "$salida" | grep -A100 'has the following vulnerable'
+              echo '```'
+            } >> "$GITHUB_STEP_SUMMARY"
+            echo "::warning::Hay paquetes NuGet con vulnerabilidades conocidas."
+          fi
+
+      - name: Paquetes npm vulnerables
+        working-directory: frontend
+        run: |
+          echo "### npm (frontend)" >> "$GITHUB_STEP_SUMMARY"
+          npm audit --audit-level=high --json > auditoria.json || true
+          python3 - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import json
+          with open("auditoria.json") as f:
+              datos = json.load(f)
+          m = datos.get("metadata", {}).get("vulnerabilities", {})
+          altas = m.get("high", 0) + m.get("critical", 0)
+          if altas == 0:
+              print("✅ Sin vulnerabilidades altas ni críticas.")
+          else:
+              print(f"⚠️ {altas} vulnerabilidades altas/críticas.")
+          print()
+          print("| Severidad | Cantidad |")
+          print("|-----------|----------|")
+          for sev in ("critical", "high", "moderate", "low", "info"):
+              print(f"| {sev} | {m.get(sev, 0)} |")
+          PY
+
+  # ────────────────────────────────────────────────────────────────
+  # 5. Despliegue: sólo desde main, y sólo si todo lo anterior pasó
+  # ────────────────────────────────────────────────────────────────
+  desplegar:
+    name: Desplegar en Render
+    runs-on: ubuntu-latest
+    needs: [backend, frontend, docker, seguridad]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    environment:
+      name: produccion
+      url: ${{ vars.RENDER_URL }}
+    steps:
+      - name: Disparar el despliegue
+        env:
+          HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}
+        run: |
+          if [ -z "$HOOK" ]; then
+            echo "::warning::Falta el secreto RENDER_DEPLOY_HOOK; se omite el despliegue."
+            echo "⚠️ Despliegue omitido: falta configurar \`RENDER_DEPLOY_HOOK\`." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          curl -sf -X POST "$HOOK" && echo "Despliegue solicitado a Render."
+
+      - name: Esperar a que la demo responda
+        if: ${{ vars.RENDER_URL != '' }}
+        run: |
+          echo "Esperando a ${{ vars.RENDER_URL }}/health …"
+          for i in $(seq 1 60); do
+            if curl -sf "${{ vars.RENDER_URL }}/health" > /dev/null; then
+              echo "✅ La demo responde: ${{ vars.RENDER_URL }}" >> "$GITHUB_STEP_SUMMARY"
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "::warning::La demo no respondió en 10 minutos (el plan gratuito tarda en despertar)."

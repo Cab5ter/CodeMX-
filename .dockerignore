@@ -1,0 +1,13 @@
+**/bin/
+**/obj/
+**/node_modules/
+**/dist/
+**/target/
+**/TestResults/
+.git/
+.github/
+.idea/
+img/
+tests/
+src/
+*.md

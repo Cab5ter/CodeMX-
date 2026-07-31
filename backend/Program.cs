@@ -12,6 +12,32 @@ using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// --- Configuración del entorno de despliegue (Render) ---
+// Render publica el puerto en PORT y la base en DATABASE_URL con formato URI, que no es
+// el que entiende Npgsql. Se traducen aquí para no tener dos ficheros de configuración.
+var puerto = Environment.GetEnvironmentVariable("PORT");
+if (!string.IsNullOrWhiteSpace(puerto))
+    builder.WebHost.UseUrls($"http://0.0.0.0:{puerto}");
+
+var databaseUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
+if (!string.IsNullOrWhiteSpace(databaseUrl))
+    builder.Configuration["ConnectionStrings:Postgres"] = CadenaNpgsqlDesde(databaseUrl);
+
+/// <summary>Convierte postgres://usuario:clave@host:puerto/base en una cadena de Npgsql.</summary>
+static string CadenaNpgsqlDesde(string url)
+{
+    var uri = new Uri(url);
+    var credenciales = uri.UserInfo.Split(':', 2);
+    return string.Join(';',
+        $"Host={uri.Host}",
+        $"Port={(uri.Port > 0 ? uri.Port : 5432)}",
+        $"Database={uri.AbsolutePath.TrimStart('/')}",
+        $"Username={Uri.UnescapeDataString(credenciales[0])}",
+        $"Password={Uri.UnescapeDataString(credenciales.Length > 1 ? credenciales[1] : "")}",
+        "SSL Mode=Require",
+        "Trust Server Certificate=true");
+}
+
 // --- Web API + Swagger/OpenAPI (Swashbuckle) ---
 // Los enums (Dificultad, Veredicto) se serializan como texto, igual que la versión Spring Boot.
 builder.Services.AddControllers().AddJsonOptions(o =>
@@ -86,7 +112,21 @@ app.UseSwaggerUI(o =>
 });
 
 app.UseCors();
+
+// En producción la imagen de Docker copia el build de Vite a wwwroot y la API sirve
+// también el frontend: un solo origen, sin CORS y un único servicio que desplegar.
+// En desarrollo wwwroot no existe y el frontend lo sirve Vite con su proxy (ADR-08).
+app.UseDefaultFiles();
+app.UseStaticFiles();
+
 app.MapControllers();
 app.MapHub<DueloHub>("/api/hub/duelos");   // canal de tiempo real del modo 1 vs 1
+
+// Cualquier ruta que no sea de la API la resuelve React Router en el cliente.
+app.MapFallbackToFile("index.html");
+
+// Sonda de salud para el monitor de Render y para el pipeline de CI.
+app.MapGet("/health", () => Results.Ok(new { estado = "ok", utc = DateTime.UtcNow }))
+   .ExcludeFromDescription();
 
 app.Run();

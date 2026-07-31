@@ -1,5 +1,10 @@
 # CodeMX
 
+[![CI](https://github.com/Cab5ter/CodeMX-/actions/workflows/ci.yml/badge.svg)](https://github.com/Cab5ter/CodeMX-/actions/workflows/ci.yml)
+![.NET](https://img.shields.io/badge/.NET-10-512BD4)
+![React](https://img.shields.io/badge/React-18-61DAFB)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1)
+
 Plataforma web de retos de programación y cursos en español, pensada para
 estudiantes universitarios mexicanos (estilo SoloLearn). Permite resolver retos,
 evaluar el código contra casos de prueba, seguir cursos con lecciones y exámenes,
@@ -219,11 +224,13 @@ servidores se configuraron para escuchar en `0.0.0.0` (todas las interfaces de r
 
 ## Pruebas e integración continua
 
-La lógica de dominio tiene una suite de pruebas unitarias con **xUnit**, escritas con el
-patrón Arrange-Act-Assert:
+**31 pruebas unitarias con xUnit**, escritas con el patrón Arrange-Act-Assert, repartidas
+en dos proyectos:
 
-- `src/CodeMX.Domain/` — modelo de dominio aislado (`Challenge`, `Submission`, `Leaderboard`)
-- `tests/CodeMX.Domain.Tests/` — 15 pruebas sobre ese modelo
+| Proyecto | Pruebas | Qué cubre |
+|----------|---------|-----------|
+| `tests/CodeMX.Domain.Tests/` | 15 | Modelo de dominio aislado: `Challenge`, `Submission`, `Leaderboard` |
+| `tests/CodeMX.Api.Tests/` | 16 | Backend real: hashing BCrypt, validación de registro, autenticación y no filtración del hash en el JSON |
 
 Para ejecutarlas, desde la raíz del repositorio:
 
@@ -233,14 +240,42 @@ dotnet build   CodeMX.sln --configuration Release
 dotnet test    CodeMX.sln --configuration Release
 ```
 
-Cada push y cada Pull Request disparan el workflow de CI (`.github/workflows/ci.yml`) en
-GitHub Actions, que compila la solución y ejecuta la suite. El check verde o rojo aparece
-en la pestaña *Actions* y en el Pull Request correspondiente. Ver el
-**ADR-05 (Pruebas y Pipeline CI)** para el detalle de qué clases se prueban y por qué.
+### El pipeline
 
-> **Pendiente:** el pipeline valida hoy únicamente `CodeMX.sln` (el modelo de dominio).
-> El backend real (`backend/CodeMX.Api.csproj`) todavía no forma parte de la solución ni
-> se compila en CI.
+Cada push y cada Pull Request disparan el workflow (`.github/workflows/ci.yml`), con
+**cinco jobs**. El check verde o rojo aparece en la pestaña *Actions* y en el Pull Request.
+
+```mermaid
+flowchart LR
+    B["Backend<br/>build + 31 pruebas<br/>+ cobertura"]
+    F["Frontend<br/>build Vite<br/>+ tamaño del bundle"]
+    S["Seguridad<br/>NuGet + npm audit"]
+    D["Docker<br/>build imagen<br/>+ arranque real"]
+    P["Desplegar<br/>Render (sólo main)"]
+
+    B --> D
+    F --> D
+    B --> P
+    F --> P
+    D --> P
+    S --> P
+```
+
+Lo que hace cada job:
+
+1. **Backend** — restaura con caché de NuGet, compila en Release, ejecuta las 31 pruebas
+   con cobertura (coverlet) y publica en el *Job Summary* cuántas pasaron, cuáles fallaron
+   y el porcentaje de líneas cubiertas. Sube los `.trx` y el reporte como artefactos.
+2. **Frontend** — `npm ci` con caché, build de producción y tabla con el tamaño de cada
+   archivo del bundle. Sube `dist/` como artefacto.
+3. **Docker** — construye la imagen con caché de capas, la **arranca de verdad** contra un
+   PostgreSQL de servicio y verifica que responden `/health`, la API, el frontend, una
+   ruta de React Router y Swagger. Si algo falla, vuelca el log del contenedor.
+4. **Seguridad** — audita dependencias vulnerables conocidas en NuGet y npm.
+5. **Desplegar** — sólo en `main` y sólo si los cuatro anteriores pasaron: dispara el
+   deploy hook de Render y espera a que `/health` de la demo responda.
+
+Ver el **ADR-06 (Pruebas y Pipeline CI)** para el detalle de qué se prueba y por qué.
 
 ---
 
@@ -249,16 +284,21 @@ en la pestaña *Actions* y en el Pull Request correspondiente. Ver el
 ```
 CodeMX-/
 ├── ADR-0X-*.md          Architecture Decision Records (decisiones de diseño)
-├── .github/workflows/   Pipeline de CI (GitHub Actions)
-├── CodeMX.sln           Solución .NET: dominio + pruebas
+├── ATAM-CodeMX.md       Evaluación ATAM: riesgos, trade-offs y sensibilidad
+├── .github/workflows/   Pipeline de CI (GitHub Actions), 5 jobs
+├── Dockerfile           Imagen única: la API sirve también el frontend
+├── render.yaml          Infraestructura de la demo (web service + PostgreSQL)
+├── CodeMX.sln           Solución .NET: dominio + API + los dos proyectos de prueba
 ├── src/CodeMX.Domain/   Modelo de dominio con pruebas unitarias
-├── tests/               Pruebas xUnit del dominio
+├── tests/
+│   ├── CodeMX.Domain.Tests/  15 pruebas del dominio
+│   └── CodeMX.Api.Tests/     16 pruebas del backend real
 ├── backend/             API ASP.NET Core (.NET 10)
-│   ├── Controllers/     (vacío; los controllers viven en Gateway)
 │   ├── Gateway/         Controllers REST por recurso (entrada de la API)
-│   ├── Modules/         Módulos por dominio (Usuarios, Retos, Envios, Evaluacion, Ranking, Cursos)
+│   ├── Modules/         Módulos por dominio (Usuarios, Retos, Envios, Evaluacion, Ranking, Cursos, Duelos)
 │   ├── Persistence/     DbContext de EF Core + sembrado de datos
-│   ├── Program.cs       Composición: DI, CORS, Swagger, arranque
+│   ├── RealTime/        Hub de SignalR y emparejamiento del modo 1 vs 1
+│   ├── Program.cs       Composición: DI, CORS, Swagger, estáticos, arranque
 │   └── appsettings.json Configuración (URL, conexión a Postgres, evaluador)
 └── frontend/            App React + Vite
     ├── src/api/         Cliente HTTP hacia /api

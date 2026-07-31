@@ -1,0 +1,39 @@
+server:
+  port: 8080
+  address: 0.0.0.0
+
+spring:
+  application:
+    name: codemx-api
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/codemx_spring
+    username: postgres
+    password: ""
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        hbm2ddl:
+          create_namespaces: true
+        format_sql: false
+    open-in-view: false
+
+  jackson:
+    default-property-inclusion: always
+
+springdoc:
+  swagger-ui:
+    path: /swagger
+
+logging:
+  level:
+    root: INFO
+    org.springframework.web: WARN
+
+evaluador:
+  url: http://localhost:8000
+  timeout-ms: 5000
+  limite-caracteres: 20000
