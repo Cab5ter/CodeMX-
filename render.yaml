@@ -12,7 +12,8 @@ services:
     dockerContext: .
     plan: free
     region: oregon
-    branch: main
+    # Rama que se despliega. Cambiar a 'main' cuando pipeline-ci se fusione allí.
+    branch: pipeline-ci
     healthCheckPath: /health
     autoDeploy: true
     envVars:
