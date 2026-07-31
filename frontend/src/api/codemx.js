@@ -25,25 +25,37 @@ export async function getRanking() {
   return res.json()
 }
 
-export async function registrarUsuario(datos) {
+// La contraseña viaja en claro sobre HTTPS y el servidor la hashea con BCrypt (ADR-07).
+// El cliente nunca calcula ni almacena hashes.
+export async function registrarUsuario({ nombre, email, password }) {
   const res = await fetch(`${BASE}/usuarios`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(datos)
+    body: JSON.stringify({ nombre, email, password })
   })
-  if (!res.ok) throw new Error('Error al registrar usuario')
+  if (!res.ok) throw new Error(await mensajeDeError(res, 'Error al registrar usuario'))
   return res.json()
 }
 
-export async function iniciarSesion({ email, passwordHash }) {
+export async function iniciarSesion({ email, password }) {
   const res = await fetch(`${BASE}/usuarios/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, passwordHash })
+    body: JSON.stringify({ email, password })
   })
   if (res.status === 401) throw new Error('Correo o contraseña incorrectos')
-  if (!res.ok) throw new Error('No se pudo iniciar sesión')
+  if (!res.ok) throw new Error(await mensajeDeError(res, 'No se pudo iniciar sesión'))
   return res.json()
+}
+
+// El backend responde { mensaje } en 400/409; si no, se usa el texto por defecto.
+async function mensajeDeError(res, porDefecto) {
+  try {
+    const cuerpo = await res.json()
+    return cuerpo?.mensaje || porDefecto
+  } catch {
+    return porDefecto
+  }
 }
 
 export async function enviarSolucion({ usuarioId, retoId, codigoFuente }) {

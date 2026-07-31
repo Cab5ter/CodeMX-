@@ -11,7 +11,7 @@ const BENEFICIOS = [
 ]
 
 export default function Registro() {
-  const [form, setForm] = useState({ nombre: '', email: '', passwordHash: '' })
+  const [form, setForm] = useState({ nombre: '', email: '', password: '' })
   const [usuario, setUsuario] = useState(null)
   const [error, setError] = useState(null)
   const [cargando, setCargando] = useState(false)
@@ -28,8 +28,9 @@ export default function Registro() {
       const u = await registrarUsuario(form)
       setUsuario(u)
       guardarSesion(u)   // inicia sesión y avisa al navbar
-    } catch {
-      setError('No se pudo crear la cuenta. ¿El correo ya está registrado?')
+    } catch (err) {
+      // El backend explica el motivo: correo duplicado, contraseña corta, correo inválido.
+      setError(err.message)
     } finally {
       setCargando(false)
     }
@@ -91,7 +92,7 @@ export default function Registro() {
           {[
             { name: 'nombre',       label: 'Nombre completo', type: 'text',     placeholder: 'Tu nombre' },
             { name: 'email',        label: 'Correo electrónico', type: 'email', placeholder: 'tu@correo.com' },
-            { name: 'passwordHash', label: 'Contraseña',      type: 'password', placeholder: '••••••••' },
+            { name: 'password', label: 'Contraseña',      type: 'password', placeholder: '••••••••' },
           ].map(field => (
             <div key={field.name}>
               <label className="text-gray-400 text-xs font-medium block mb-1.5 uppercase tracking-wide">

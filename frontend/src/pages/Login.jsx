@@ -4,7 +4,7 @@ import { iniciarSesion } from '../api/codemx'
 import { guardarSesion } from '../api/sesion'
 
 export default function Login() {
-  const [form, setForm] = useState({ email: '', passwordHash: '' })
+  const [form, setForm] = useState({ email: '', password: '' })
   const [error, setError] = useState(null)
   const [cargando, setCargando] = useState(false)
   const navigate = useNavigate()
@@ -41,7 +41,7 @@ export default function Login() {
         <form onSubmit={handleSubmit} className="space-y-4">
           {[
             { name: 'email',        label: 'Correo electrónico', type: 'email',    placeholder: 'tu@correo.com' },
-            { name: 'passwordHash', label: 'Contraseña',         type: 'password', placeholder: '••••••••' },
+            { name: 'password', label: 'Contraseña',         type: 'password', placeholder: '••••••••' },
           ].map(field => (
             <div key={field.name}>
               <label className="text-gray-400 text-xs font-medium block mb-1.5 uppercase tracking-wide">
