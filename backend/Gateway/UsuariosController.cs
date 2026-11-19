@@ -27,6 +27,14 @@ public class UsuariosController : ControllerBase
     public async Task<ActionResult<Usuario>> Crear([FromBody] Usuario usuario) =>
         Ok(await _usuarios.GuardarAsync(usuario));
 
+    /// <summary>Inicia sesión validando correo + contraseña.</summary>
+    [HttpPost("login")]
+    public async Task<ActionResult<Usuario>> Login([FromBody] CredencialesLogin credenciales)
+    {
+        var usuario = await _usuarios.AutenticarAsync(credenciales.Email, credenciales.PasswordHash);
+        return usuario is null ? Unauthorized() : Ok(usuario);
+    }
+
     [HttpDelete("{id:long}")]
     public async Task<IActionResult> Eliminar(long id)
     {
@@ -34,3 +42,6 @@ public class UsuariosController : ControllerBase
         return NoContent();
     }
 }
+
+/// <summary>Credenciales para iniciar sesión.</summary>
+public record CredencialesLogin(string Email, string PasswordHash);

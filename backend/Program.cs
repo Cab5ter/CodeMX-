@@ -1,10 +1,12 @@
 using CodeMX.Api.Modules.Cursos;
+using CodeMX.Api.Modules.Duelos;
 using CodeMX.Api.Modules.Envios;
 using CodeMX.Api.Modules.Evaluacion;
 using CodeMX.Api.Modules.Ranking;
 using CodeMX.Api.Modules.Retos;
 using CodeMX.Api.Modules.Usuarios;
 using CodeMX.Api.Persistence;
+using CodeMX.Api.RealTime;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json.Serialization;
 
@@ -52,6 +54,15 @@ builder.Services.AddScoped<IEvaluadorStrategyFactory, EvaluadorStrategyFactory>(
 // --- Patrón Observer: Ranking se suscribe a los envíos aceptados ---
 builder.Services.AddScoped<IEnvioObserver, RankingEnvioObserver>();
 
+// --- Módulo Duelos (1 vs 1) + tiempo real con SignalR ---
+builder.Services.AddScoped<DueloRepository>();
+builder.Services.AddScoped<IDuelosApi, DueloService>();
+builder.Services.AddScoped<ClaudeGeneradorProblemas>();
+builder.Services.AddScoped<RetoSembradoGenerador>();
+builder.Services.AddScoped<IGeneradorProblemas, GeneradorProblemas>();
+builder.Services.AddSingleton<MatchmakingService>();   // cola y duelos activos en memoria
+builder.Services.AddSignalR();
+
 // --- CORS para el frontend React (Vite) ---
 builder.Services.AddCors(o => o.AddDefaultPolicy(p =>
     p.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod()));
@@ -76,5 +87,6 @@ app.UseSwaggerUI(o =>
 
 app.UseCors();
 app.MapControllers();
+app.MapHub<DueloHub>("/api/hub/duelos");   // canal de tiempo real del modo 1 vs 1
 
 app.Run();

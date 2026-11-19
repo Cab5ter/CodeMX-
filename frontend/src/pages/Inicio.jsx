@@ -9,16 +9,16 @@ const FILTROS = [
   { value: 'AVANZADO',   label: 'Avanzado',     color: 'text-red-400'     },
 ]
 
-const STATS = [
-  { valor: '8',     label: 'Retos disponibles' },
-  { valor: '3',     label: 'Niveles de dificultad' },
-  { valor: '100%',  label: 'En español' },
-]
-
 export default function Inicio() {
   const [retos, setRetos] = useState([])
+  const [total, setTotal] = useState(0)
   const [filtro, setFiltro] = useState(null)
   const [cargando, setCargando] = useState(true)
+
+  // Total de retos para el contador, independiente del filtro activo.
+  useEffect(() => {
+    getRetos().then(r => setTotal(r.length)).catch(() => {})
+  }, [])
 
   useEffect(() => {
     setCargando(true)
@@ -26,6 +26,12 @@ export default function Inicio() {
       .then(setRetos)
       .finally(() => setCargando(false))
   }, [filtro])
+
+  const STATS = [
+    { valor: String(total || '—'), label: 'Retos disponibles' },
+    { valor: '3',     label: 'Niveles de dificultad' },
+    { valor: '100%',  label: 'En español' },
+  ]
 
   return (
     <div>

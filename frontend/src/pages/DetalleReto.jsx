@@ -4,9 +4,9 @@ import EditorCodigo from '../components/EditorCodigo'
 import { getRetoById, getEjemploReto, enviarSolucion } from '../api/codemx'
 
 const DIFFICULTY = {
-  BASICO:     { label: 'Básico',     style: 'bg-emerald-500/10 text-emerald-400 ring-1 ring-emerald-500/30' },
-  INTERMEDIO: { label: 'Intermedio', style: 'bg-amber-500/10  text-amber-400  ring-1 ring-amber-400/30'  },
-  AVANZADO:   { label: 'Avanzado',   style: 'bg-red-500/10    text-red-400    ring-1 ring-red-500/30'    },
+  BASICO:     { label: 'Básico',     puntos: 10, style: 'bg-emerald-500/10 text-emerald-400 ring-1 ring-emerald-500/30' },
+  INTERMEDIO: { label: 'Intermedio', puntos: 25, style: 'bg-amber-500/10  text-amber-400  ring-1 ring-amber-400/30'  },
+  AVANZADO:   { label: 'Avanzado',   puntos: 50, style: 'bg-red-500/10    text-red-400    ring-1 ring-red-500/30'    },
 }
 
 const VEREDICTO = {
@@ -91,6 +91,7 @@ export default function DetalleReto() {
               <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${d.style}`}>
                 {d.label}
               </span>
+              <span className="text-emerald-400 text-xs font-semibold">+{d.puntos} pts al resolver</span>
             </div>
             <h1 className="text-2xl font-bold text-white">{reto.titulo}</h1>
           </div>

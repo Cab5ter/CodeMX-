@@ -1,7 +1,26 @@
-import { Link, NavLink } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { Link, NavLink, useNavigate } from 'react-router-dom'
+import { getSesion, cerrarSesion } from '../api/sesion'
 
 export default function Navbar() {
-  const usuarioId = localStorage.getItem('usuarioId')
+  const [sesion, setSesion] = useState(getSesion())
+  const navigate = useNavigate()
+
+  // Se mantiene al día cuando entras o sales (evento 'sesion') o cambia otra pestaña ('storage').
+  useEffect(() => {
+    const refrescar = () => setSesion(getSesion())
+    window.addEventListener('sesion', refrescar)
+    window.addEventListener('storage', refrescar)
+    return () => {
+      window.removeEventListener('sesion', refrescar)
+      window.removeEventListener('storage', refrescar)
+    }
+  }, [])
+
+  function salir() {
+    cerrarSesion()
+    navigate('/login')
+  }
 
   const linkClass = ({ isActive }) =>
     `px-4 py-2 text-sm font-medium transition-all border-b-2 ${
@@ -22,15 +41,33 @@ export default function Navbar() {
         <div className="flex items-center h-14">
           <NavLink to="/" className={linkClass} end>Cursos</NavLink>
           <NavLink to="/ejercicios" className={linkClass}>Ejercicios</NavLink>
+          <NavLink to="/vs" className={linkClass}>1 vs 1</NavLink>
           <NavLink to="/ranking" className={linkClass}>Ranking</NavLink>
-          <NavLink to="/registro" className={linkClass}>Registro</NavLink>
+          {!sesion && <NavLink to="/registro" className={linkClass}>Registro</NavLink>}
         </div>
 
-        {usuarioId && (
-          <div className="flex items-center gap-2 bg-gray-800 px-3 py-1.5 rounded-full border border-gray-700">
-            <span className="w-2 h-2 rounded-full bg-emerald-400" />
-            <span className="text-xs text-gray-300 font-mono">Usuario #{usuarioId}</span>
+        {sesion ? (
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 bg-gray-800 px-3 py-1.5 rounded-full border border-gray-700">
+              <span className="w-2 h-2 rounded-full bg-emerald-400" />
+              <span className="text-xs text-gray-200 font-medium max-w-[120px] truncate" title={sesion.nombre}>
+                {sesion.nombre}
+              </span>
+            </div>
+            <button
+              onClick={salir}
+              className="text-xs text-gray-400 hover:text-red-400 px-3 py-1.5 rounded-full border border-gray-700 hover:border-red-500/40 transition-colors"
+            >
+              Salir
+            </button>
           </div>
+        ) : (
+          <Link
+            to="/login"
+            className="text-sm text-emerald-400 hover:text-emerald-300 px-4 py-1.5 rounded-full border border-emerald-500/40 hover:border-emerald-500/70 transition-colors"
+          >
+            Iniciar sesión
+          </Link>
         )}
       </div>
     </nav>
