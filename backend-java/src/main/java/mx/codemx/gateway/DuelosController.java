@@ -1,5 +1,6 @@
 package mx.codemx.gateway;
 
+import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -36,6 +37,7 @@ public class DuelosController {
                     identificador del ganador. El problema lo genera la API de Claude al momento de
                     emparejar; si no está disponible, se usa un reto sembrado de respaldo.""")
     @ApiResponse(responseCode = "200", description = "Historial de duelos (posiblemente vacío)")
+    @Hidden
     @GetMapping("/usuario/{usuarioId}")
     public ResponseEntity<List<Duelo>> historial(
             @Parameter(description = "Identificador del usuario") @PathVariable long usuarioId) {

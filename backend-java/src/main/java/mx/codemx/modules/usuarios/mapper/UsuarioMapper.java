@@ -17,6 +17,7 @@ public interface UsuarioMapper {
     @Mapping(source = "nombre", target = "nombre", defaultValue = "")
     @Mapping(source = "email", target = "email", defaultValue = "")
     @Mapping(source = "passwordHash", target = "passwordHash", defaultValue = "")
+    @Mapping(target = "firebaseUid", ignore = true)
     Usuario toEntity(UsuarioDominio dominio);
 
     List<UsuarioDominio> toDominio(List<Usuario> entidades);

@@ -13,6 +13,7 @@ import mx.codemx.modules.evaluacion.ResultadoEvaluacion;
 import mx.codemx.modules.retos.Dificultad;
 import mx.codemx.modules.usuarios.Usuario;
 import mx.codemx.modules.usuarios.UsuariosApi;
+import mx.codemx.security.UsuarioAutenticado;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -56,24 +57,28 @@ public class DueloWebSocketHandler extends TextWebSocketHandler {
         String target = sobre.path("target").asString("");
         JsonNode args = sobre.path("arguments");
 
+        UsuarioAutenticado yo = usuarioDe(session);
+        if (yo == null) {
+            log.warn("Mensaje de duelo en una sesión sin usuario autenticado; se cierra");
+            session.close(CloseStatus.POLICY_VIOLATION);
+            return;
+        }
+
         switch (target) {
-            case "BuscarDuelo" -> buscarDuelo(session,
-                    args.path(0).asLong(),
-                    args.path(1).asString(""),
+            case "BuscarDuelo" -> buscarDuelo(session, yo.id(), yo.nombre(),
                     args.path(2).asString(""));
             case "EnviarSolucion" -> enviarSolucion(session,
-                    args.path(0).asLong(),
-                    args.path(1).asLong(),
-                    args.path(2).asString(""));
+                    args.path(0).asLong(), yo.id(), args.path(2).asString(""));
             case "EnviarMensaje" -> enviarMensaje(
-                    args.path(0).asLong(),
-                    args.path(1).asLong(),
-                    args.path(2).asText(""));
-            case "Escribiendo" -> escribiendo(session,
-                    args.path(0).asLong(),
-                    args.path(1).asLong());
+                    args.path(0).asLong(), yo.id(), args.path(2).asText(""));
+            case "Escribiendo" -> escribiendo(session, args.path(0).asLong(), yo.id());
             default -> log.warn("Mensaje de duelo desconocido: {}", target);
         }
+    }
+
+    private static UsuarioAutenticado usuarioDe(WebSocketSession session) {
+        Object atributo = session.getAttributes().get(JwtHandshakeInterceptor.ATRIBUTO_USUARIO);
+        return atributo instanceof UsuarioAutenticado usuario ? usuario : null;
     }
 
     private void buscarDuelo(WebSocketSession session, long usuarioId, String nombre, String dificultad) {

@@ -27,6 +27,29 @@ spring:
 springdoc:
   swagger-ui:
     path: /swagger
+    tags-sorter: alpha
+    # Ordena las operaciones por ruta. Sin esto salen en orden arbitrario y los endpoints
+    # que listan (los que no piden ningún id) quedan por debajo de los que sí lo piden,
+    # así que no se ve por dónde empezar.
+    operations-sorter: alpha
+    doc-expansion: none
+
+codemx:
+  firebase:
+    # ID público del mismo proyecto configurado en la aplicación Flutter.
+    project-id: ${CODEMX_FIREBASE_PROJECT_ID:flutter-spring-test}
+  jwt:
+    # HS256 firma con una clave de 256 bits: el secreto necesita 32 caracteres como mínimo
+    # o la aplicación no arranca. En despliegue real defínelo por variable de entorno
+    # (CODEMX_JWT_SECRETO) y no lo dejes en el repositorio.
+    secreto: ${CODEMX_JWT_SECRETO:codemx-secreto-de-desarrollo-cambialo-en-produccion}
+    vigencia-ms: 86400000  # 24 horas
+
+  cors:
+    # Orígenes que pueden llamar la API y el hub de duelos desde el navegador.
+    # En desarrollo el frontend usa el proxy de Vite, así que esto solo aplica si
+    # alguien llama al backend directo. Agrega aquí el origen de despliegue cuando lo haya.
+    origenes: http://localhost:[*],http://127.0.0.1:[*]
 
 logging:
   level:

@@ -25,6 +25,14 @@ public class Usuario {
     @Column(name = "password_hash", nullable = false)
     private String passwordHash = "";
 
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    @Column(name = "firebase_uid", unique = true, length = 128)
+    private String firebaseUid;
+
+    public String getFirebaseUid() { return firebaseUid; }
+
+    public void setFirebaseUid(String firebaseUid) { this.firebaseUid = firebaseUid; }
+
     @Column(name = "creado_en", nullable = false)
     private Instant creadoEn = Instant.now();
 

@@ -23,7 +23,8 @@ public class Envio {
     private Long id;
 
     @Positive(message = "El usuarioId es obligatorio y debe ser mayor que cero")
-    @Schema(description = "Estudiante que hace el envío", example = "1")
+    @Schema(accessMode = Schema.AccessMode.READ_ONLY,
+            description = "Autor del envío. Lo toma el servidor del token; no se manda en el cuerpo.")
     @Column(name = "usuario_id", nullable = false)
     private long usuarioId;
 
@@ -33,7 +34,7 @@ public class Envio {
     private long retoId;
 
     @NotBlank(message = "El código fuente no puede estar vacío")
-    @Schema(description = "Código Python a evaluar", example = "print(\"Hola, Mundo!\")")
+    @Schema(description = "Código Python evaluado", example = "print(\"Hola, Mundo!\")")
     @Column(name = "codigo_fuente", nullable = false, columnDefinition = "text")
     private String codigoFuente = "";
 

@@ -2,12 +2,17 @@ package mx.codemx.gateway;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.net.URI;
 import java.util.List;
+import mx.codemx.modules.auth.AuthApi;
+import mx.codemx.modules.auth.LoginRequest;
+import mx.codemx.modules.auth.LoginResponse;
 import mx.codemx.modules.usuarios.UsuariosApi;
 import mx.codemx.modules.usuarios.domain.UsuarioDominio;
 import mx.codemx.modules.usuarios.mapper.UsuarioMapper;
@@ -27,15 +32,22 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "Usuarios", description = "Alta, consulta y autenticación de los estudiantes de la plataforma.")
 public class UsuariosController {
 
-    public record CredencialesLogin(String email, String passwordHash) {
+    @Schema(description = "Correo y contraseña con los que se registró el estudiante.")
+    public record CredencialesLogin(
+            @Schema(description = "Correo con el que se registró la cuenta", example = "tu@correo.com")
+            String email,
+            @Schema(description = "Contraseña en texto plano; ver la deuda técnica DT-01", example = "cambia-esto")
+            String passwordHash) {
     }
 
     private final UsuariosApi usuarios;
     private final UsuarioMapper mapper;
+    private final AuthApi auth;
 
-    public UsuariosController(UsuariosApi usuarios, UsuarioMapper mapper) {
+    public UsuariosController(UsuariosApi usuarios, UsuarioMapper mapper, AuthApi auth) {
         this.usuarios = usuarios;
         this.mapper = mapper;
+        this.auth = auth;
     }
 
     @Operation(
@@ -82,12 +94,16 @@ public class UsuariosController {
                     `Location` que apunta a él. El `id` lo asigna siempre la base de datos: si el
                     cuerpo trae uno, se ignora.
 
-                    **Deuda técnica DT-01:** la contraseña se recibe y se guarda en texto plano en el
-                    campo `passwordHash`, que además viaja de vuelta en la respuesta. Ver el README.""")
+                    Es pública a propósito: si exigiera token, nadie podría crear su primera cuenta.
+
+                    La contraseña se recibe en texto plano por el cuerpo y se guarda cifrada con BCrypt;
+                    nunca se devuelve en la respuesta. Después de registrarte, pide tu token en
+                    `POST /auth/login`.""")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Usuario creado"),
             @ApiResponse(responseCode = "409", description = "El correo ya está registrado")
     })
+    @SecurityRequirements
     @PostMapping
     public ResponseEntity<UsuarioDominio> crear(@Valid @RequestBody UsuarioDominio usuario) {
         usuario.setId(null);
@@ -96,22 +112,23 @@ public class UsuariosController {
     }
 
     @Operation(
-            summary = "Iniciar sesión",
+            summary = "Iniciar sesión (obsoleto: usa POST /auth/login)",
+            deprecated = true,
             description = """
-                    Busca al usuario por correo y compara la contraseña recibida con la almacenada.
-                    Devuelve el usuario cuando coinciden y `401` cuando no. No emite ningún token ni
-                    cookie de sesión: el frontend guarda el objeto del usuario y las demás operaciones
-                    confían en el `usuarioId` que envía el cliente (deuda técnica DT-01).""")
+                    Alias histórico de `POST /auth/login`. Se conserva para no romper a los clientes que
+                    ya lo llamaban, y desde que existe la autenticación con JWT devuelve exactamente la
+                    misma respuesta que la ruta nueva: el token más los datos del estudiante.
+
+                    Para código nuevo usa `POST /auth/login`.""")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Credenciales válidas; devuelve el usuario"),
+            @ApiResponse(responseCode = "200", description = "Credenciales válidas; devuelve el token"),
             @ApiResponse(responseCode = "401", description = "Correo inexistente o contraseña incorrecta")
     })
+    @Deprecated
     @PostMapping("/login")
-    public ResponseEntity<UsuarioDominio> login(@RequestBody CredencialesLogin credenciales) {
-        return usuarios.autenticar(credenciales.email(), credenciales.passwordHash())
-                .map(mapper::toDominio)
-                .map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.status(HttpStatus.UNAUTHORIZED).build());
+    public ResponseEntity<LoginResponse> login(@RequestBody CredencialesLogin credenciales) {
+        return ResponseEntity.ok(
+                auth.iniciarSesion(new LoginRequest(credenciales.email(), credenciales.passwordHash())));
     }
 
     @Operation(

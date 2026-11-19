@@ -9,8 +9,11 @@ import jakarta.validation.Valid;
 import java.net.URI;
 import java.util.List;
 import mx.codemx.modules.envios.Envio;
+import mx.codemx.modules.envios.EnvioRequest;
 import mx.codemx.modules.envios.EnviosApi;
+import mx.codemx.security.UsuarioAutenticado;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -44,12 +47,17 @@ public class EnviosController {
                     (patrón Observer). Los envíos aceptados posteriores del mismo reto no vuelven a
                     sumar.
 
-                    El `id` y el `veredicto` los asigna el servidor: si el cuerpo los trae, se ignoran.""")
+                    **El envío se registra siempre a nombre de quien manda el token**, no de un
+                    `usuarioId` del cuerpo. Por eso el cuerpo solo pide `retoId` y `codigoFuente`: si
+                    el cliente pudiera elegir el autor, cualquiera con sesión podría resolver retos
+                    por otro y moverle los puntos.
+
+                    El `id` y el `veredicto` los asigna el servidor.""")
     @ApiResponse(responseCode = "201", description = "Envío registrado y evaluado; el cuerpo trae el veredicto")
     @PostMapping
-    public ResponseEntity<Envio> enviar(@Valid @RequestBody Envio envio) {
-        envio.setId(null);
-        Envio creado = envios.enviar(envio);
+    public ResponseEntity<Envio> enviar(@Valid @RequestBody EnvioRequest peticion,
+                                        @AuthenticationPrincipal UsuarioAutenticado autor) {
+        Envio creado = envios.enviar(peticion.aEnvio(autor.id()));
         return ResponseEntity.created(URI.create("/api/envios/" + creado.getId())).body(creado);
     }
 

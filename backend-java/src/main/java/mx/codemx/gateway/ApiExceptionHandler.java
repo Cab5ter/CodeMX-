@@ -2,6 +2,7 @@ package mx.codemx.gateway;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import mx.codemx.modules.auth.CredencialesInvalidasException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,6 +22,12 @@ public class ApiExceptionHandler {
             errores.putIfAbsent(error.getField(), error.getDefaultMessage());
         }
         return ResponseEntity.badRequest().body(errores);
+    }
+
+    @ExceptionHandler(CredencialesInvalidasException.class)
+    public ResponseEntity<Map<String, String>> credencialesInvalidas(CredencialesInvalidasException e) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(Map.of("error", e.getMessage()));
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)

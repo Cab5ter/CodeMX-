@@ -15,5 +15,7 @@ public interface UsuariosApi {
 
     Usuario guardar(Usuario usuario);
 
+    Usuario buscarOCrearDesdeFirebase(String uid, String email, String nombre, boolean correoVerificado);
+
     void eliminar(long id);
 }
