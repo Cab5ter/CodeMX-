@@ -138,7 +138,7 @@ public static class DataSeeder
 
         // ---------- Módulo 1: Fundamentos de Python ----------
         var m1 = CrearModulo(db, "Fundamentos de Python", "🐍",
-            "Aprende las bases del lenguaje: variables, tipos de datos y operadores.", 1);
+            "Aprende las bases del lenguaje: variables, tipos de datos, texto y operadores.", 1);
 
         Teoria(db, m1, 1, "Variables y tipos de datos",
             "Una variable es un nombre que guarda un valor. En Python no declaras el tipo: " +
@@ -149,16 +149,27 @@ public static class DataSeeder
             "edad = 20          # int\npromedio = 8.5     # float\nnombre = \"Ana\"     # str\n\n" +
             "print(nombre, \"tiene\", edad, \"años\")");
 
-        Teoria(db, m1, 2, "Operadores aritméticos",
+        Teoria(db, m1, 2, "Cadenas de texto (str)",
+            "Una cadena (str) es texto entre comillas. Puedes unir varias con el operador + " +
+            "(concatenar) y repetirlas con *.\n\n" +
+            "• len(texto): cuántos caracteres tiene\n• texto.upper(): todo en mayúsculas\n" +
+            "• texto.lower(): todo en minúsculas\n\n" +
+            "Con f-strings insertas variables dentro del texto poniendo una f antes de las comillas.",
+            "nombre = \"Ana\"\nsaludo = \"Hola, \" + nombre + \"!\"\nprint(saludo)            # Hola, Ana!\n\n" +
+            "print(nombre.upper())    # ANA\nprint(f\"{nombre} tiene 3 letras\")");
+
+        Teoria(db, m1, 3, "Operadores aritméticos",
             "Python incluye:\n• +  suma\n• -  resta\n• *  multiplicación\n• /  división (float)\n" +
             "• // división entera\n• %  módulo (residuo)\n• ** potencia\n\n" +
             "El operador % es muy útil: un número es par si n % 2 == 0.",
             "print(7 / 2)    # 3.5\nprint(7 // 2)   # 3\nprint(7 % 2)    # 1\nprint(2 ** 10)  # 1024");
 
-        Ejercicio(db, m1, 3, "Practica: Suma de dos números", "Suma de dos números");
+        Ejercicio(db, m1, 4, "Practica: Suma de dos números", "Suma de dos números");
 
         Examen(db, m1, 1, "¿Cuál es el resultado de 7 % 3?", "2", "1", "3", "0", 1);
         Examen(db, m1, 2, "¿Qué función muestra información en pantalla?", "type()", "print()", "len()", "show()", 1);
+        Examen(db, m1, 3, "¿Qué hace \"ab\" + \"cd\" en Python?",
+            "Suma 0", "Une las cadenas: \"abcd\"", "Da un error", "Repite \"ab\"", 1);
 
         // ---------- Módulo 2: Control de flujo ----------
         var m2 = CrearModulo(db, "Control de flujo", "🔀",
