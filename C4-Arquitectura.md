@@ -88,3 +88,93 @@ pinta la interfaz y llama al backend (por el proxy `/api`, así no hay URLs incr
 La **API .NET** concentra la lógica y habla con tres cosas: la **base PostgreSQL** (vía EF
 Core), el **evaluador Python** (HTTP) y la **API de Claude** (SDK). Los duelos usan un
 canal aparte en **tiempo real (SignalR/WebSocket)**, no REST.
+
+---
+
+## Nivel 3 — Componentes (dentro de la API REST)
+
+> **¿Para quién es?** Para quien programa dentro del backend. **¿Qué pregunta responde?**
+> *¿Qué hay dentro del contenedor "API REST": qué controladores, servicios de dominio y
+> patrones de diseño lo forman y cómo colaboran?* Aquí se ven los **patrones GoF** ya
+> implementados: **Strategy**, **Factory Method** y **Observer**.
+
+```mermaid
+C4Component
+    title Nivel 3 - Componentes dentro de la API REST (ASP.NET Core, .NET 10)
+
+    Person(estudiante, "Estudiante")
+    ContainerDb(db, "PostgreSQL", "EF Core / CodeMxDbContext")
+    System_Ext(evaluador, "Evaluador Python", "HTTP")
+    System_Ext(claude, "Anthropic Claude API", "SDK")
+
+    Container_Boundary(api, "API REST (.NET 10)") {
+        Component(gateway, "Gateway / Controllers", "REST Controllers", "Usuarios, Retos, Envios, Ranking, Cursos, Duelos — entrada HTTP")
+        Component(hub, "DueloHub + MatchmakingService", "SignalR", "Canal en tiempo real y emparejamiento del modo 1 vs 1")
+
+        Component(usuarios, "Módulo Usuarios", "IUsuariosApi → UsuarioService", "Registro y login")
+        Component(retos, "Módulo Retos", "IRetosApi → RetoService", "Catálogo de retos y casos de prueba")
+        Component(cursos, "Módulo Cursos", "ICursosApi → CursoService", "Cursos, lecciones y exámenes")
+        Component(envios, "Módulo Envíos (Subject)", "IEnviosApi → EnvioService", "Orquesta el envío; publica el evento al ser ACEPTADO")
+        Component(evaluacion, "Módulo Evaluación", "IEvaluacionApi → EvaluacionService", "Decide el veredicto del código")
+        Component(ranking, "Módulo Ranking (Observer)", "IRankingApi + RankingEnvioObserver", "Puntajes; reacciona a los envíos aceptados")
+        Component(duelos, "Módulo Duelos", "IDuelosApi → DueloService", "Lógica del modo 1 vs 1")
+
+        Component(factory, "EvaluadorStrategyFactory", "Factory Method", "Crea la estrategia según TipoEvaluacion")
+        Component(stratR, "EvaluacionRemotaStrategy", "Strategy", "Delega en el evaluador Python")
+        Component(stratL, "EvaluacionLocalStrategy", "Strategy", "Respaldo local si la remota falla")
+        Component(generador, "GeneradorProblemas", "Strategy + fallback", "Claude → respaldo sembrado (RetoSembradoGenerador)")
+    }
+
+    Rel(estudiante, gateway, "Peticiones REST", "HTTP/JSON")
+    Rel(estudiante, hub, "Duelo en vivo", "WebSocket")
+
+    Rel(gateway, usuarios, "usa")
+    Rel(gateway, retos, "usa")
+    Rel(gateway, cursos, "usa")
+    Rel(gateway, envios, "usa")
+    Rel(gateway, ranking, "usa")
+    Rel(hub, duelos, "usa")
+
+    Rel(envios, evaluacion, "pide evaluación", "IEvaluacionApi")
+    Rel(envios, ranking, "notifica ACEPTADO", "IEnvioObserver (Observer)")
+    Rel(evaluacion, factory, "pide una estrategia")
+    Rel(factory, stratR, "crea")
+    Rel(factory, stratL, "crea (fallback)")
+    Rel(stratR, evaluador, "ejecuta código", "HTTP")
+    Rel(duelos, generador, "genera problema")
+    Rel(generador, claude, "prompt", "SDK")
+
+    Rel(usuarios, db, "EF Core")
+    Rel(retos, db, "EF Core")
+    Rel(cursos, db, "EF Core")
+    Rel(envios, db, "EF Core")
+    Rel(ranking, db, "EF Core")
+
+    UpdateLayoutConfig($c4ShapeInRow="3", $c4BoundaryInRow="1")
+```
+
+**Lectura del diagrama y patrones GoF:**
+
+- **Arquitectura por módulos.** Cada módulo expone una **interfaz pública** (`I…Api`) y
+  esconde su `Service` + `Repository`. Los módulos se hablan solo por esas interfaces, no
+  por sus clases internas (monolito modular, ADR-03).
+- **Strategy** — `IEvaluacionStrategy` tiene dos implementaciones intercambiables:
+  `EvaluacionRemotaStrategy` (evaluador Python) y `EvaluacionLocalStrategy` (respaldo). El
+  mismo patrón aparece en Duelos con `IGeneradorProblemas` (Claude vs. sembrado).
+- **Factory Method** — `EvaluadorStrategyFactory` decide **qué** estrategia crear según el
+  `TipoEvaluacion`, e intenta la remota cayendo a la local.
+- **Observer** — `EnvioService` (sujeto) publica `EnvioAceptadoEvent` cuando un envío es
+  aceptado por primera vez; `RankingEnvioObserver` está suscrito como `IEnvioObserver` y
+  actualiza el ranking. Así **Envíos no conoce a Ranking**: mañana podrían sumarse otros
+  observadores (logros, notificaciones) sin tocar Envíos.
+
+---
+
+## Declaración de uso de IA
+
+Los **diagramas y textos de este documento** se elaboraron con apoyo de **Claude Code
+(Claude Opus 4.8)**, a partir de una lectura del código real del repositorio (`Program.cs`,
+los módulos de `backend/Modules/`, los controladores del `Gateway/` y el hub de tiempo
+real). El contenido fue revisado para que refleje la arquitectura efectivamente
+implementada. El modelo C4 elegido, la validación de cada nivel y las decisiones de
+diseño descritas corresponden al autor del proyecto.
