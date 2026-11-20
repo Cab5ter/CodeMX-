@@ -132,3 +132,40 @@ CodeMX-/
     ├── src/pages/       Páginas (Inicio, Cursos, Reto, Examen, Ranking…)
     └── vite.config.js   Servidor de desarrollo + proxy a /api
 ```
+
+---
+
+# Arquitectura — Modelo C4
+
+Arquitectura de CodeMX descrita con el **Modelo C4**, versionada como código. Los
+diagramas están escritos en **Mermaid** (GitHub los renderiza automáticamente). El C4
+describe el sistema con *zoom* progresivo: Nivel 1 (contexto) → Nivel 2 (contenedores)
+→ Nivel 3 (componentes).
+
+## Nivel 1 — Contexto
+
+> **¿Para quién es?** Para cualquiera, incluidos no técnicos (profesores, evaluadores).
+> **¿Qué pregunta responde?** *¿Qué es CodeMX, quién lo usa y con qué sistemas externos
+> habla?* — sin entrar en tecnología interna.
+
+```mermaid
+C4Context
+    title Nivel 1 - Contexto del sistema CodeMX
+
+    Person(estudiante, "Estudiante universitario", "Resuelve retos, sigue cursos con lecciones y exámenes, compite en duelos 1v1 y en el ranking")
+
+    System(codemx, "CodeMX", "Plataforma web de retos de programación y cursos en español, estilo SoloLearn")
+
+    System_Ext(evaluador, "Servicio Evaluador Python", "Ejecuta el código enviado por el estudiante contra casos de prueba")
+    System_Ext(claude, "Anthropic Claude API", "Genera problemas para los duelos 1 vs 1 bajo demanda")
+
+    Rel(estudiante, codemx, "Resuelve retos y toma cursos", "HTTPS / navegador")
+    Rel(codemx, evaluador, "Envía código a evaluar", "HTTP / JSON")
+    Rel(codemx, claude, "Solicita generar un problema", "HTTPS / SDK oficial")
+
+    UpdateLayoutConfig($c4ShapeInRow="2", $c4BoundaryInRow="1")
+```
+
+**Lectura:** el único usuario es el **estudiante**. CodeMX se apoya en dos sistemas
+externos: el **evaluador Python** (decide si el código pasa los casos de prueba) y la
+**API de Claude** (inventa los problemas de los duelos).
