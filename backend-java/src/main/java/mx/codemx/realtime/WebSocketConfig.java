@@ -6,8 +6,8 @@ import org.springframework.web.socket.config.annotation.WebSocketConfigurer;
 import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry;
 
 /**
- * Registra el canal de tiempo real del modo 1 vs 1 en la misma ruta que usaba el hub de
- * SignalR (/api/hub/duelos), para que el proxy de Vite y el frontend no cambien de URL.
+ * Registra el canal de tiempo real del modo 1 vs 1 en /api/hub/duelos, la ruta que el
+ * proxy de Vite ya redirige con {@code ws: true}.
  */
 @Configuration
 @EnableWebSocket

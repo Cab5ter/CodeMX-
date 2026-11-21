@@ -21,9 +21,9 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * Siembra los retos y los cursos de ejemplo si la base está vacía.
  *
- * <p>A diferencia de la versión .NET no hace falta crear a mano el esquema/tabla de Duelos:
- * Hibernate con {@code ddl-auto: update} y {@code create_namespaces: true} crea los esquemas
- * por módulo y sus tablas al arrancar.
+ * <p>No hace falta crear a mano los esquemas ni las tablas: Hibernate, con
+ * {@code ddl-auto: update} y {@code create_namespaces: true}, crea el esquema de cada
+ * módulo y sus tablas al arrancar.
  */
 @Component
 public class DataSeeder implements CommandLineRunner {
