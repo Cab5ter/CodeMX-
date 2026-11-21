@@ -20,6 +20,21 @@ import org.springframework.transaction.annotation.Transactional;
 @Component
 public class DataSeeder implements CommandLineRunner {
 
+    private static final List<String> TITULOS_SEMBRADOS = List.of(
+            "Hola, Mundo",
+            "Tu primera variable",
+            "Suma con variables",
+            "Área del cuadrado",
+            "El doble",
+            "Saludo personalizado",
+            "Par o impar",
+            "Suma de dos números",
+            "Número palíndromo",
+            "FizzBuzz",
+            "Números primos hasta N",
+            "Fibonacci iterativo",
+            "Búsqueda binaria");
+
     private final RetoRepository retos;
     private final ModuloRepository modulos;
     private final LeccionRepository lecciones;
@@ -38,16 +53,14 @@ public class DataSeeder implements CommandLineRunner {
     @Override
     @Transactional
     public void run(String... args) {
-        seedRetos();
-        seedCursos();
+        boolean retosRecreados = seedRetos();
+        seedCursos(retosRecreados);
     }
 
-    private void seedRetos() {
-        String primero = jdbc.query(
-                "SELECT titulo FROM retos.retos ORDER BY id ASC LIMIT 1",
-                rs -> rs.next() ? rs.getString(1) : null);
-        if ("Hola, Mundo".equals(primero)) {
-            return;
+    private boolean seedRetos() {
+        List<String> titulosEnBase = jdbc.queryForList("SELECT titulo FROM retos.retos", String.class);
+        if (titulosEnBase.containsAll(TITULOS_SEMBRADOS)) {
+            return false;
         }
 
         jdbc.execute("TRUNCATE TABLE retos.casos_prueba, retos.retos RESTART IDENTITY CASCADE");
@@ -89,6 +102,11 @@ public class DataSeeder implements CommandLineRunner {
                 "Crea dos variables a = 2 y b = 3. Imprime el resultado de sumarlas.\n\nSalida esperada:\n5",
                 Dificultad.INTERMEDIO, "", "5");
 
+        crearReto("Número palíndromo",
+                "Crea la variable n = 121. Un número es palíndromo si se lee igual al derecho y al "
+                        + "revés. Imprime SI cuando lo sea o NO cuando no lo sea.\n\nSalida esperada:\nSI",
+                Dificultad.INTERMEDIO, "", "SI");
+
         crearReto("FizzBuzz",
                 "Crea la variable n = 5. Imprime los números del 1 al n; múltiplos de 3 => 'Fizz', "
                         + "de 5 => 'Buzz', de ambos => 'FizzBuzz'.\n\nSalida esperada:\n1\n2\nFizz\n4\nBuzz",
@@ -108,6 +126,8 @@ public class DataSeeder implements CommandLineRunner {
                 "Crea el arreglo ordenado arr = [1, 3, 5, 7, 9] y el valor k = 5. Imprime el índice "
                         + "(base 0) de k en arr, o -1 si no existe.\n\nSalida esperada:\n2",
                 Dificultad.AVANZADO, "", "2");
+
+        return true;
     }
 
     private void crearReto(String titulo, String descripcion, Dificultad dificultad,
@@ -121,9 +141,13 @@ public class DataSeeder implements CommandLineRunner {
         retos.save(reto);
     }
 
-    private void seedCursos() {
-        if (modulos.count() > 0) {
+    private void seedCursos(boolean retosRecreados) {
+        if (modulos.count() > 0 && !retosRecreados) {
             return;
+        }
+        if (modulos.count() > 0) {
+            jdbc.execute("TRUNCATE TABLE cursos.progreso_lecciones, cursos.preguntas_examen, "
+                    + "cursos.lecciones, cursos.modulos RESTART IDENTITY CASCADE");
         }
 
         Modulo m1 = crearModulo("Fundamentos de Python", "🐍",
@@ -237,7 +261,12 @@ public class DataSeeder implements CommandLineRunner {
     }
 
     private void ejercicio(Modulo modulo, int orden, String titulo, String tituloReto) {
-        Long retoId = retos.findByTitulo(tituloReto).map(Reto::getId).orElse(null);
+        Long retoId = retos.findByTitulo(tituloReto)
+                .map(Reto::getId)
+                .orElseThrow(() -> new IllegalStateException(
+                        "La lección \"" + titulo + "\" apunta al reto \"" + tituloReto + "\", que no "
+                                + "existe en el catálogo sembrado. Agrégalo en seedRetos() y a "
+                                + "TITULOS_SEMBRADOS, o corrige el título."));
 
         Leccion l = new Leccion();
         l.setModulo(modulo);

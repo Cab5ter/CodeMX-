@@ -1,3 +1,5 @@
+import { getToken } from './sesion'
+
 export function crearConexionDuelos() {
   const handlers = new Map()
   const alCerrar = []
@@ -6,7 +8,9 @@ export function crearConexionDuelos() {
 
   function urlDelHub() {
     const protocolo = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
-    return `${protocolo}//${window.location.host}/api/hub/duelos`
+    const token = getToken()
+    const query = token ? `?token=${encodeURIComponent(token)}` : ''
+    return `${protocolo}//${window.location.host}/api/hub/duelos${query}`
   }
 
   return {

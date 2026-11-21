@@ -51,9 +51,8 @@ export default function DetalleReto() {
     setResultado(null)
     setEnviando(true)
     try {
-      const res = await enviarSolucion({ usuarioId: Number(usuarioId), retoId: Number(id), codigoFuente: codigo })
+      const res = await enviarSolucion({ retoId: Number(id), codigoFuente: codigo })
       setResultado(res)
-      localStorage.setItem('usuarioId', usuarioId)
     } catch (e) {
       setError(e.message)
     } finally {

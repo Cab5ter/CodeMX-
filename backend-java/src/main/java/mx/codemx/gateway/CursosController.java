@@ -2,6 +2,8 @@ package mx.codemx.gateway;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -37,34 +39,44 @@ public class CursosController {
     }
 
     @Operation(
-            summary = "Listar los módulos del curso",
+            summary = "Listar los módulos del curso — empieza aquí, de aquí salen los moduloId",
             description = """
+                    **Punto de entrada del módulo de cursos.** No pide ningún identificador, así que es
+                    la llamada con la que se descubren los demás: el campo `id` de cada elemento de la
+                    respuesta es el `moduloId` que piden los otros endpoints.
+
                     Devuelve el resumen de cada módulo: título, ícono y número de lecciones. Si se envía
                     `usuarioId`, cada resumen incluye además cuántas lecciones lleva completadas ese
                     estudiante, su porcentaje de avance y si ya tiene desbloqueado el examen. Sin
-                    `usuarioId` el progreso se devuelve en cero.""")
-    @ApiResponse(responseCode = "200", description = "Lista de módulos")
+                    `usuarioId` el progreso se devuelve en cero, que es lo que quieres para solo mirar
+                    el catálogo.""")
+    @ApiResponse(responseCode = "200", description = "Lista de módulos, cada uno con su id")
     @GetMapping
     public ResponseEntity<List<ModuloResumen>> listar(
-            @Parameter(description = "Estudiante del cual calcular el progreso. Opcional.")
+            @Parameter(description = "Estudiante del cual calcular el progreso. Opcional: déjalo vacío "
+                    + "para ver el catálogo sin progreso.", example = "1")
             @RequestParam(required = false) Long usuarioId) {
         return ResponseEntity.ok(cursos.listarModulos(usuarioId));
     }
 
     @Operation(
-            summary = "Obtener un módulo con sus lecciones",
+            summary = "Obtener un módulo con sus lecciones — de aquí salen los leccionId",
             description = """
                     Devuelve el módulo completo con la lista ordenada de sus lecciones, marcando cuáles
-                    ya completó el estudiante indicado. Incluye `umbralExamen`, el porcentaje de avance
-                    necesario para desbloquear el examen.""")
+                    ya completó el estudiante indicado. El campo `id` de cada lección es el `leccionId`
+                    que piden los endpoints de lecciones.
+
+                    Incluye `umbralExamen`, el porcentaje de avance necesario para desbloquear el
+                    examen. El `moduloId` sale de `GET /api/cursos`.""")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Módulo encontrado"),
+            @ApiResponse(responseCode = "200", description = "Módulo encontrado, con sus lecciones y sus id"),
             @ApiResponse(responseCode = "404", description = "No existe un módulo con ese identificador")
     })
     @GetMapping("/modulos/{moduloId}")
     public ResponseEntity<ModuloDetalle> obtenerModulo(
-            @Parameter(description = "Identificador del módulo") @PathVariable long moduloId,
-            @Parameter(description = "Estudiante del cual calcular el progreso. Opcional.")
+            @Parameter(description = "Identificador del módulo; lo da GET /api/cursos", example = "1")
+            @PathVariable long moduloId,
+            @Parameter(description = "Estudiante del cual calcular el progreso. Opcional.", example = "1")
             @RequestParam(required = false) Long usuarioId) {
         return ResponseEntity.ok(cursos.obtenerModulo(moduloId, usuarioId));
     }
@@ -73,15 +85,19 @@ public class CursosController {
             summary = "Obtener el contenido de una lección",
             description = """
                     Devuelve el contenido de la lección y su ejemplo de código. Las lecciones de tipo
-                    `EJERCICIO` traen además el `retoId` que hay que resolver para completarlas.""")
+                    `EJERCICIO` traen además el `retoId` que hay que resolver para completarlas.
+
+                    El `leccionId` sale de `GET /api/cursos/modulos/{moduloId}`.""")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Lección encontrada"),
             @ApiResponse(responseCode = "404", description = "No existe una lección con ese identificador")
     })
     @GetMapping("/lecciones/{leccionId}")
     public ResponseEntity<LeccionDetalle> obtenerLeccion(
-            @Parameter(description = "Identificador de la lección") @PathVariable long leccionId,
-            @Parameter(description = "Estudiante del cual verificar si ya la completó. Opcional.")
+            @Parameter(description = "Identificador de la lección; lo da GET /api/cursos/modulos/{moduloId}",
+                    example = "1")
+            @PathVariable long leccionId,
+            @Parameter(description = "Estudiante del cual verificar si ya la completó. Opcional.", example = "1")
             @RequestParam(required = false) Long usuarioId) {
         return ResponseEntity.ok(cursos.obtenerLeccion(leccionId, usuarioId));
     }
@@ -102,8 +118,11 @@ public class CursosController {
     })
     @PostMapping("/lecciones/{leccionId}/completar")
     public ResponseEntity<Void> completar(
-            @Parameter(description = "Identificador de la lección") @PathVariable long leccionId,
-            @Parameter(description = "Estudiante que completó la lección") @RequestParam long usuarioId) {
+            @Parameter(description = "Identificador de la lección; lo da GET /api/cursos/modulos/{moduloId}",
+                    example = "1")
+            @PathVariable long leccionId,
+            @Parameter(description = "Estudiante que completó la lección", example = "1")
+            @RequestParam long usuarioId) {
         cursos.completarLeccion(leccionId, usuarioId);
         return ResponseEntity.noContent().build();
     }
@@ -123,8 +142,10 @@ public class CursosController {
     })
     @GetMapping("/modulos/{moduloId}/examen")
     public ResponseEntity<List<PreguntaVista>> examen(
-            @Parameter(description = "Identificador del módulo") @PathVariable long moduloId,
-            @Parameter(description = "Estudiante que presenta el examen") @RequestParam long usuarioId) {
+            @Parameter(description = "Identificador del módulo; lo da GET /api/cursos", example = "1")
+            @PathVariable long moduloId,
+            @Parameter(description = "Estudiante que presenta el examen", example = "1")
+            @RequestParam long usuarioId) {
         return ResponseEntity.ok(cursos.obtenerExamen(moduloId, usuarioId));
     }
 
@@ -133,6 +154,9 @@ public class CursosController {
             description = """
                     Recibe las respuestas del estudiante como un mapa `idPregunta: índiceDeOpción`
                     (0 = A, 1 = B, 2 = C, 3 = D) y las compara contra las correctas en el servidor.
+
+                    Los `idPregunta` salen de `GET /api/cursos/modulos/{moduloId}/examen`, el endpoint
+                    de aquí arriba: llámalo primero y usa el campo `id` de cada pregunta como clave.
 
                     Devuelve aciertos, total de preguntas, porcentaje y si aprobó. El umbral de
                     aprobación es 70 %. Las preguntas que no aparezcan en el mapa cuentan como
@@ -144,8 +168,15 @@ public class CursosController {
     })
     @PostMapping("/modulos/{moduloId}/examen")
     public ResponseEntity<ResultadoExamen> calificar(
-            @Parameter(description = "Identificador del módulo") @PathVariable long moduloId,
-            @Parameter(description = "Estudiante que presenta el examen") @RequestParam long usuarioId,
+            @Parameter(description = "Identificador del módulo; lo da GET /api/cursos", example = "1")
+            @PathVariable long moduloId,
+            @Parameter(description = "Estudiante que presenta el examen", example = "1")
+            @RequestParam long usuarioId,
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = "Mapa de idPregunta a índice de opción elegida (0 = A … 3 = D)",
+                    content = @Content(examples = @ExampleObject(
+                            name = "Tres preguntas respondidas",
+                            value = "{\"1\": 1, \"2\": 1, \"3\": 1}")))
             @RequestBody Map<Long, Integer> respuestas) {
         return ResponseEntity.ok(cursos.calificarExamen(moduloId, usuarioId, respuestas));
     }

@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { iniciarSesion } from '../api/codemx'
-import { guardarSesion } from '../api/sesion'
 
 export default function Login() {
   const [form, setForm] = useState({ email: '', passwordHash: '' })
@@ -18,8 +17,7 @@ export default function Login() {
     setError(null)
     setCargando(true)
     try {
-      const usuario = await iniciarSesion(form)
-      guardarSesion(usuario)
+      await iniciarSesion(form)
       navigate('/')
     } catch (err) {
       setError(err.message)
