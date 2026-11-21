@@ -2,9 +2,12 @@ package mx.codemx.modules.cursos;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import java.time.Instant;
@@ -22,11 +25,17 @@ public class ProgresoLeccion {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    /**
+     * Columna suelta a propósito: apunta al módulo <b>Usuarios</b> y una foreign key
+     * entre esquemas rompería la frontera del ADR-03.
+     */
     @Column(name = "usuario_id", nullable = false)
     private long usuarioId;
 
-    @Column(name = "leccion_id", nullable = false)
-    private long leccionId;
+    /** Lado <b>muchos</b> —y dueño— de la relación con {@link Leccion}, dentro del mismo módulo. */
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "leccion_id", nullable = false)
+    private Leccion leccion;
 
     @Column(name = "completada_en", nullable = false)
     private Instant completadaEn = Instant.now();
@@ -34,9 +43,9 @@ public class ProgresoLeccion {
     public ProgresoLeccion() {
     }
 
-    public ProgresoLeccion(long usuarioId, long leccionId) {
+    public ProgresoLeccion(long usuarioId, Leccion leccion) {
         this.usuarioId = usuarioId;
-        this.leccionId = leccionId;
+        this.leccion = leccion;
     }
 
     public Long getId() {
@@ -55,12 +64,12 @@ public class ProgresoLeccion {
         this.usuarioId = usuarioId;
     }
 
-    public long getLeccionId() {
-        return leccionId;
+    public Leccion getLeccion() {
+        return leccion;
     }
 
-    public void setLeccionId(long leccionId) {
-        this.leccionId = leccionId;
+    public void setLeccion(Leccion leccion) {
+        this.leccion = leccion;
     }
 
     public Instant getCompletadaEn() {

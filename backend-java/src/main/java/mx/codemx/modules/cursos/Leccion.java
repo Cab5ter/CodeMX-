@@ -1,13 +1,20 @@
 package mx.codemx.modules.cursos;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import java.util.ArrayList;
+import java.util.List;
 
 /** Lección de un módulo: teoría o ejercicio enlazado a un reto. */
 @Entity
@@ -18,8 +25,13 @@ public class Leccion {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "modulo_id", nullable = false)
-    private long moduloId;
+    /**
+     * Lado <b>muchos</b> —y dueño— de la relación con {@link Modulo}: mantiene la
+     * columna {@code modulo_id}.
+     */
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "modulo_id", nullable = false)
+    private Modulo modulo;
 
     @Column(nullable = false)
     private String titulo = "";
@@ -35,12 +47,25 @@ public class Leccion {
     @Column(name = "ejemplo_codigo", columnDefinition = "text")
     private String ejemploCodigo;
 
-    // Para EJERCICIO: el reto que el alumno debe resolver.
+    /**
+     * Para EJERCICIO: el reto que el alumno debe resolver.
+     *
+     * <p>Se queda como columna suelta a propósito: apunta al módulo <b>Retos</b>, y una
+     * foreign key entre esquemas soldaría los dos módulos en la base de datos, que es
+     * justo lo que el ADR-03 evita. La resolución va por {@code RetosApi}.
+     */
     @Column(name = "reto_id")
     private Long retoId;
 
     @Column(name = "orden", nullable = false)
     private int orden;
+
+    /**
+     * Lado <b>uno</b> de la relación con {@link ProgresoLeccion}: una lección acumula el
+     * avance de varios alumnos. Si se borra la lección, su avance se va con ella.
+     */
+    @OneToMany(mappedBy = "leccion", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ProgresoLeccion> progresos = new ArrayList<>();
 
     public Long getId() {
         return id;
@@ -50,12 +75,20 @@ public class Leccion {
         this.id = id;
     }
 
-    public long getModuloId() {
-        return moduloId;
+    public Modulo getModulo() {
+        return modulo;
     }
 
-    public void setModuloId(long moduloId) {
-        this.moduloId = moduloId;
+    public void setModulo(Modulo modulo) {
+        this.modulo = modulo;
+    }
+
+    public List<ProgresoLeccion> getProgresos() {
+        return progresos;
+    }
+
+    public void setProgresos(List<ProgresoLeccion> progresos) {
+        this.progresos = progresos;
     }
 
     public String getTitulo() {
