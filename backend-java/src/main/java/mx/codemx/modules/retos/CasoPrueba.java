@@ -1,17 +1,21 @@
 package mx.codemx.modules.retos;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 /**
  * Caso de prueba de un reto (entrada y salida esperada).
  *
  * <p>También se usa (sin persistir) para los casos de un problema de duelo generado al
- * vuelo por Claude; en ese escenario el {@code id} y el {@code retoId} quedan nulos.
+ * vuelo por Claude; en ese escenario el {@code id} y el {@code reto} quedan nulos.
  */
 @Entity
 @Table(name = "casos_prueba", schema = "retos")
@@ -21,8 +25,19 @@ public class CasoPrueba {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "reto_id")
-    private Long retoId;
+    /**
+     * Lado <b>muchos</b> —y dueño— de la relación muchos&nbsp;a&nbsp;uno con {@link Reto}:
+     * este extremo es el que mantiene la columna {@code reto_id}.
+     *
+     * <p>{@code LAZY} evita traer el reto entero cada vez que se leen los casos para
+     * evaluar un envío, que es el camino caliente. {@code @JsonIgnore} corta la recursión
+     * infinita al serializar: sin él, {@code GET /api/retos/{id}/ejemplo} devolvería el
+     * caso → su reto → los casos del reto → … indefinidamente.
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "reto_id")
+    @JsonIgnore
+    private Reto reto;
 
     @Column(name = "input_data", columnDefinition = "text")
     private String inputData;
@@ -47,12 +62,12 @@ public class CasoPrueba {
         this.id = id;
     }
 
-    public Long getRetoId() {
-        return retoId;
+    public Reto getReto() {
+        return reto;
     }
 
-    public void setRetoId(Long retoId) {
-        this.retoId = retoId;
+    public void setReto(Reto reto) {
+        this.reto = reto;
     }
 
     public String getInputData() {
