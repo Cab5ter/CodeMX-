@@ -52,12 +52,10 @@ export default function Leccion() {
       </div>
       <h1 className="text-2xl font-bold text-white mb-6">{leccion.titulo}</h1>
 
-      {/* Contenido */}
       <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 mb-4">
         <p className="text-gray-300 leading-relaxed whitespace-pre-line">{leccion.contenido}</p>
       </div>
 
-      {/* Ejemplo de código */}
       {leccion.ejemploCodigo && (
         <div className="rounded-xl overflow-hidden border border-gray-800 mb-6">
           <div className="bg-gray-900 border-b border-gray-800 px-4 py-2 flex items-center gap-2">
@@ -72,7 +70,6 @@ export default function Leccion() {
 
       {error && <p className="text-red-400 text-sm mb-4">{error}</p>}
 
-      {/* Acción */}
       {completada ? (
         <div className="flex items-center justify-center gap-2 bg-emerald-500/10 border border-emerald-500/40 text-emerald-400 font-semibold py-3 rounded-xl">
           ✓ Lección completada

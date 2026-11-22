@@ -21,7 +21,6 @@ export default function TablaPosiciones({ entradas }) {
 
   return (
     <div className="space-y-6">
-      {/* Podio */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {top3.map((entrada, i) => (
           <div key={entrada.id} className={`rounded-xl border p-5 text-center ${MEDAL_STYLE[i]}`}>
@@ -33,7 +32,6 @@ export default function TablaPosiciones({ entradas }) {
         ))}
       </div>
 
-      {/* Resto */}
       {resto.length > 0 && (
         <div className="rounded-xl border border-gray-800 overflow-hidden">
           <table className="w-full text-sm">

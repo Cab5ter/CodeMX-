@@ -13,15 +13,9 @@ import mx.codemx.modules.retos.CasoPrueba;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-/**
- * Estrategia concreta (Strategy): ejecuta el código localmente con un proceso python3,
- * respetando el mismo timeout. Sirve de respaldo mientras el Servicio Python externo
- * no esté disponible.
- */
 @Component
 public class EvaluacionLocalStrategy implements EvaluacionStrategy {
 
-    /** Se lanza cuando el proceso excede el tiempo límite, para distinguirlo de un error normal. */
     private static class TiempoAgotadoException extends RuntimeException {
         TiempoAgotadoException(String mensaje) {
             super(mensaje);
@@ -80,8 +74,6 @@ public class EvaluacionLocalStrategy implements EvaluacionStrategy {
                 proc.getOutputStream().close();
             }
 
-            // Se leen ambos flujos en paralelo: si el proceso llena el buffer de una
-            // tubería mientras leemos la otra de forma secuencial, se bloquea.
             var stdoutFuture = leerAsync(proc.getInputStream());
             var stderrFuture = leerAsync(proc.getErrorStream());
 

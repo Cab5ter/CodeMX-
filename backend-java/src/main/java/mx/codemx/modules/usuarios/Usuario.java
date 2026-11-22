@@ -8,7 +8,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.time.Instant;
 
-/** Entidad de dominio del módulo Usuarios. */
 @Entity
 @Table(name = "usuarios", schema = "usuarios")
 public class Usuario {

@@ -23,31 +23,6 @@ import org.springframework.web.socket.handler.TextWebSocketHandler;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
-/**
- * Canal de tiempo real del modo 1 vs 1. Maneja el emparejamiento, el envío de soluciones
- * (que se evalúan en el servidor contra los casos del problema), el cierre del duelo con
- * puntos y el chat en vivo entre los dos jugadores.
- *
- * <p>Protocolo: JSON por WebSocket, con la misma forma en ambos sentidos —
- * <code>{"target": "...", "arguments": [...]}</code>. El cliente
- * (<code>frontend/src/api/duelosHub.js</code>) expone sobre esto una superficie
- * <code>on/invoke/start/stop</code>, así que los componentes no hablan del protocolo.
- *
- * <p>Mensajes que el cliente puede invocar: {@code BuscarDuelo}, {@code EnviarSolucion},
- * {@code EnviarMensaje}, {@code Escribiendo}.
- *
- * <p>Eventos que emite hacia el cliente:
- * <ul>
- *   <li>{@code EnEspera()} → estás en la cola, esperando rival</li>
- *   <li>{@code DueloIniciado(dto)} → hay rival y problema; empieza el duelo</li>
- *   <li>{@code ResultadoEnvio({veredicto,mensajeError})} → resultado de TU envío</li>
- *   <li>{@code RivalFallo({usuarioId,veredicto})} → tu rival envió y falló</li>
- *   <li>{@code RivalEscribiendo({usuarioId})} → tu rival está escribiendo en el chat</li>
- *   <li>{@code MensajeRecibido({usuarioId,...})} → mensaje de chat</li>
- *   <li>{@code DueloTerminado({ganadorId,...})} → alguien ganó (o hubo abandono)</li>
- *   <li>{@code DueloNoDisponible()} → el duelo ya no existe</li>
- * </ul>
- */
 @Component
 public class DueloWebSocketHandler extends TextWebSocketHandler {
 
@@ -59,7 +34,6 @@ public class DueloWebSocketHandler extends TextWebSocketHandler {
     private final UsuariosApi usuarios;
     private final ObjectMapper json;
 
-    /** Conexiones vivas, para poder emitir a los dos jugadores de un duelo. */
     private final Map<String, WebSocketSession> sesiones = new ConcurrentHashMap<>();
 
     public DueloWebSocketHandler(MatchmakingService matchmaking, GeneradorProblemas generador,
@@ -102,7 +76,6 @@ public class DueloWebSocketHandler extends TextWebSocketHandler {
         }
     }
 
-    /** Entra a la cola con una dificultad. Si hay rival esperando (misma dificultad), crea el duelo. */
     private void buscarDuelo(WebSocketSession session, long usuarioId, String nombre, String dificultad) {
         Dificultad nivel = parsearDificultad(dificultad);
         String nombreReal = resolverNombre(usuarioId, nombre);
@@ -115,7 +88,6 @@ public class DueloWebSocketHandler extends TextWebSocketHandler {
             return;
         }
 
-        // Soy el segundo en llegar: genero el problema (de la dificultad acordada) y abro el duelo.
         ProblemaDuelo problema = generador.generar(nivel);
         Duelo duelo = duelos.crear(rival.usuarioId(), usuarioId, problema.titulo(), nivel);
 
@@ -124,7 +96,6 @@ public class DueloWebSocketHandler extends TextWebSocketHandler {
 
         DueloService.PuntosDuelo puntos = DueloService.puntosPorDificultad(nivel);
 
-        // El payload NUNCA incluye los casos de prueba (sólo enunciado y un ejemplo).
         DueloIniciadoDto dto = new DueloIniciadoDto(
                 duelo.getId(),
                 problema.titulo(),
@@ -140,7 +111,6 @@ public class DueloWebSocketHandler extends TextWebSocketHandler {
         enviarAGrupo(activo, "DueloIniciado", dto);
     }
 
-    /** Evalúa una solución. El primero en lograr ACEPTADO gana el duelo. */
     private void enviarSolucion(WebSocketSession session, long dueloId, long usuarioId, String codigo) {
         DueloActivo activo = matchmaking.obtener(dueloId);
         if (activo == null) {
@@ -158,7 +128,6 @@ public class DueloWebSocketHandler extends TextWebSocketHandler {
             return;
         }
 
-        // No ganó: o falló, o alguien ya había ganado.
         enviar(session, "ResultadoEnvio",
                 new ResultadoEnvioDto(resultado.veredicto(), resultado.mensajeError()));
 
@@ -168,7 +137,6 @@ public class DueloWebSocketHandler extends TextWebSocketHandler {
         }
     }
 
-    /** Chat en vivo entre los dos jugadores del duelo. */
     private void enviarMensaje(long dueloId, long usuarioId, String texto) {
         DueloActivo activo = matchmaking.obtener(dueloId);
         if (activo == null || texto.isBlank()) {
@@ -179,7 +147,6 @@ public class DueloWebSocketHandler extends TextWebSocketHandler {
                 new MensajeDto(usuarioId, activo.nombreDe(usuarioId), texto.trim(), Instant.now()));
     }
 
-    /** Indicador "está escribiendo…". */
     private void escribiendo(WebSocketSession session, long dueloId, long usuarioId) {
         DueloActivo activo = matchmaking.obtener(dueloId);
         if (activo == null) {
@@ -188,7 +155,6 @@ public class DueloWebSocketHandler extends TextWebSocketHandler {
         enviarAGrupoExcepto(activo, session.getId(), "RivalEscribiendo", new UsuarioDto(usuarioId));
     }
 
-    /** Si alguien abandona un duelo en curso, el rival gana por abandono. */
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
         sesiones.remove(session.getId());
@@ -207,7 +173,6 @@ public class DueloWebSocketHandler extends TextWebSocketHandler {
         }
     }
 
-    // ---- helpers ----
 
     private static Dificultad parsearDificultad(String valor) {
         try {
@@ -238,7 +203,6 @@ public class DueloWebSocketHandler extends TextWebSocketHandler {
         try {
             List<Object> argumentos = payload == null ? List.of() : List.of(payload);
             String texto = json.writeValueAsString(Map.of("target", target, "arguments", argumentos));
-            // WebSocketSession no admite envíos concurrentes: hay que serializarlos por sesión.
             synchronized (session) {
                 session.sendMessage(new TextMessage(texto));
             }
@@ -261,7 +225,6 @@ public class DueloWebSocketHandler extends TextWebSocketHandler {
         }
     }
 
-    // ---- payloads hacia el cliente ----
 
     private record JugadorDto(long id, String nombre) {
     }

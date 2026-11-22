@@ -8,11 +8,6 @@ import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
-/**
- * Estrategia concreta (Strategy): envía el código al Servicio Python externo (sandbox)
- * por HTTP/JSON con un timeout explícito. Si el servicio no responde, lanza excepción
- * para que el contexto (EvaluacionService) recurra a la estrategia de respaldo.
- */
 @Component
 public class EvaluacionRemotaStrategy implements EvaluacionStrategy {
 

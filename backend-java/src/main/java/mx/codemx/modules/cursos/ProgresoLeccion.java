@@ -12,10 +12,6 @@ import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import java.time.Instant;
 
-/**
- * Marca que un usuario completó una lección de TEORIA. Las de EJERCICIO no usan
- * esta tabla: su avance se deduce de los envíos ACEPTADOS (módulo Envíos).
- */
 @Entity
 @Table(name = "progreso_lecciones", schema = "cursos",
         uniqueConstraints = @UniqueConstraint(columnNames = {"usuario_id", "leccion_id"}))
@@ -25,14 +21,9 @@ public class ProgresoLeccion {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    /**
-     * Columna suelta a propósito: apunta al módulo <b>Usuarios</b> y una foreign key
-     * entre esquemas rompería la frontera del ADR-03.
-     */
     @Column(name = "usuario_id", nullable = false)
     private long usuarioId;
 
-    /** Lado <b>muchos</b> —y dueño— de la relación con {@link Leccion}, dentro del mismo módulo. */
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "leccion_id", nullable = false)
     private Leccion leccion;

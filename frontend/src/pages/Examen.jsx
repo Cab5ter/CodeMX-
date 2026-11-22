@@ -9,7 +9,7 @@ export default function Examen() {
   const usuarioId = localStorage.getItem('usuarioId')
 
   const [preguntas, setPreguntas] = useState(null)
-  const [respuestas, setRespuestas] = useState({})   // preguntaId -> índice
+  const [respuestas, setRespuestas] = useState({})
   const [resultado, setResultado] = useState(null)
   const [bloqueado, setBloqueado] = useState(false)
   const [enviando, setEnviando] = useState(false)

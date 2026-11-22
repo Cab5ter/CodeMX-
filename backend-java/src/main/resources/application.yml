@@ -7,9 +7,6 @@ spring:
     name: codemx-api
 
   datasource:
-    # Base propia de esta implementación. No se reutiliza codemx_api: esa base fue
-    # creada por una implementación anterior que nombra las columnas "Id"/"Jugador1Id",
-    # incompatible con el snake_case que genera Hibernate.
     url: jdbc:postgresql://localhost:5432/codemx_spring
     username: postgres
     password: ""
@@ -19,19 +16,14 @@ spring:
       ddl-auto: update
     properties:
       hibernate:
-        # PostgreSQL es la única fuente de verdad, con un esquema lógico por módulo
-        # (usuarios, retos, envios, ranking, cursos, duelos) — ADR-03. Hibernate necesita
-        # crear esos esquemas antes de las tablas.
         hbm2ddl:
           create_namespaces: true
         format_sql: false
     open-in-view: false
 
   jackson:
-    # Los enums (Dificultad, Veredicto) se serializan como texto, no como ordinal.
     default-property-inclusion: always
 
-# Swagger disponible siempre: la documentación del contrato es parte del ADR-04.
 springdoc:
   swagger-ui:
     path: /swagger
@@ -41,7 +33,6 @@ logging:
     root: INFO
     org.springframework.web: WARN
 
-# Servicio Python externo (sandbox de evaluación) usado por la estrategia remota.
 evaluador:
   url: http://localhost:8000
   timeout-ms: 5000

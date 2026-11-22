@@ -12,7 +12,6 @@ import jakarta.persistence.Table;
 import java.util.ArrayList;
 import java.util.List;
 
-/** Módulo de aprendizaje (curso). */
 @Entity
 @Table(name = "modulos", schema = "cursos")
 public class Modulo {
@@ -33,16 +32,10 @@ public class Modulo {
     @Column(name = "orden", nullable = false)
     private int orden;
 
-    /**
-     * Lado <b>uno</b> de la relación uno a muchos con {@link Leccion}: un módulo tiene
-     * varias lecciones, cada lección pertenece a un módulo. El dueño es {@code Leccion}
-     * (guarda la columna {@code modulo_id}); la cascada evita lecciones huérfanas.
-     */
     @OneToMany(mappedBy = "modulo", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("orden ASC")
     private List<Leccion> lecciones = new ArrayList<>();
 
-    /** Lado <b>uno</b> de la relación uno a muchos con las preguntas del examen del módulo. */
     @OneToMany(mappedBy = "modulo", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("orden ASC")
     private List<PreguntaExamen> preguntas = new ArrayList<>();
@@ -103,13 +96,11 @@ public class Modulo {
         this.preguntas = preguntas;
     }
 
-    /** Añade una lección manteniendo sincronizados los dos extremos de la relación. */
     public void agregarLeccion(Leccion leccion) {
         lecciones.add(leccion);
         leccion.setModulo(this);
     }
 
-    /** Añade una pregunta de examen manteniendo sincronizados los dos extremos. */
     public void agregarPregunta(PreguntaExamen pregunta) {
         preguntas.add(pregunta);
         pregunta.setModulo(this);

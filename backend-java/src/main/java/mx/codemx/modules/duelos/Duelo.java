@@ -11,12 +11,6 @@ import jakarta.persistence.Table;
 import java.time.Instant;
 import mx.codemx.modules.retos.Dificultad;
 
-/**
- * Entidad de dominio del módulo Duelos. Registra un enfrentamiento 1 vs 1 entre dos
- * usuarios sobre un problema de programación. El enunciado y los casos de prueba del
- * problema viven en memoria mientras el duelo está en curso (módulo de tiempo real);
- * aquí sólo persiste lo necesario para el ranking y el historial.
- */
 @Entity
 @Table(name = "duelos", schema = "duelos")
 public class Duelo {
@@ -31,14 +25,12 @@ public class Duelo {
     @Column(name = "jugador2_id", nullable = false)
     private long jugador2Id;
 
-    /** Quién resolvió primero. {@code null} mientras el duelo sigue en curso. */
     @Column(name = "ganador_id")
     private Long ganadorId;
 
     @Column(nullable = false)
     private String titulo = "";
 
-    /** Dificultad elegida por ambos jugadores; define los puntos en juego. */
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Dificultad dificultad = Dificultad.INTERMEDIO;

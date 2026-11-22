@@ -10,7 +10,6 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
-/** Pregunta de opción múltiple del examen de un módulo. */
 @Entity
 @Table(name = "preguntas_examen", schema = "cursos")
 public class PreguntaExamen {
@@ -19,7 +18,6 @@ public class PreguntaExamen {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    /** Lado <b>muchos</b> —y dueño— de la relación con {@link Modulo}. */
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "modulo_id", nullable = false)
     private Modulo modulo;
@@ -39,7 +37,6 @@ public class PreguntaExamen {
     @Column(name = "opcion_d", nullable = false)
     private String opcionD = "";
 
-    /** Índice de la opción correcta (0 = A, 1 = B, 2 = C, 3 = D). */
     @Column(nullable = false)
     private int correcta;
 

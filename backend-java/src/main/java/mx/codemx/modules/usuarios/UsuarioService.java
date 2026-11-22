@@ -5,7 +5,6 @@ import java.util.Optional;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/** Implementación del módulo Usuarios. */
 @Service
 @Transactional
 public class UsuarioService implements UsuariosApi {

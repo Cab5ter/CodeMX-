@@ -17,13 +17,6 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-/**
- * Siembra los retos y los cursos de ejemplo si la base está vacía.
- *
- * <p>No hace falta crear a mano los esquemas ni las tablas: Hibernate, con
- * {@code ddl-auto: update} y {@code create_namespaces: true}, crea el esquema de cada
- * módulo y sus tablas al arrancar.
- */
 @Component
 public class DataSeeder implements CommandLineRunner {
 
@@ -50,8 +43,6 @@ public class DataSeeder implements CommandLineRunner {
     }
 
     private void seedRetos() {
-        // Catálogo nuevo con progresión real para principiantes. El primer reto es "Hola, Mundo":
-        // si ya está, no hace falta resembrar.
         String primero = retos.findAllByOrderByIdAsc().stream()
                 .findFirst()
                 .map(Reto::getTitulo)
@@ -60,10 +51,8 @@ public class DataSeeder implements CommandLineRunner {
             return;
         }
 
-        // Resembrado: borra el catálogo viejo y reinicia los IDs (no toca ranking ni duelos).
         jdbc.execute("TRUNCATE TABLE retos.casos_prueba, retos.retos RESTART IDENTITY CASCADE");
 
-        // --- FÁCIL: solo print y variables, SIN entrada (así se empieza en Python) ---
         crearReto("Hola, Mundo",
                 "Tu primer programa. Imprime exactamente este texto:\n\nHola, Mundo!\n\n"
                         + "No se lee nada de teclado; solo usa print().",
@@ -83,7 +72,6 @@ public class DataSeeder implements CommandLineRunner {
                         + "(lado por lado).\n\nSalida esperada:\n25",
                 Dificultad.BASICO, "", "25");
 
-        // --- INTERMEDIO: variables fijas y condicionales, SIN entrada ---
         crearReto("El doble",
                 "Crea la variable n = 4 e imprime su doble (n multiplicado por 2).\n\nSalida esperada:\n8",
                 Dificultad.INTERMEDIO, "", "8");
@@ -102,7 +90,6 @@ public class DataSeeder implements CommandLineRunner {
                 "Crea dos variables a = 2 y b = 3. Imprime el resultado de sumarlas.\n\nSalida esperada:\n5",
                 Dificultad.INTERMEDIO, "", "5");
 
-        // --- DIFÍCIL: ciclos y algoritmos con valores fijos, SIN entrada ---
         crearReto("FizzBuzz",
                 "Crea la variable n = 5. Imprime los números del 1 al n; múltiplos de 3 => 'Fizz', "
                         + "de 5 => 'Buzz', de ambos => 'FizzBuzz'.\n\nSalida esperada:\n1\n2\nFizz\n4\nBuzz",
@@ -131,21 +118,15 @@ public class DataSeeder implements CommandLineRunner {
         reto.setDescripcion(descripcion);
         reto.setDificultad(dificultad);
 
-        // La relación uno a muchos se encarga del resto: al guardar el reto, la cascada
-        // persiste sus casos con la clave foránea ya puesta.
         reto.agregarCaso(new CasoPrueba(input, output));
         retos.save(reto);
     }
 
-    // ============================================================
-    //  CURSOS: módulos, lecciones (teoría + ejercicio) y exámenes
-    // ============================================================
     private void seedCursos() {
         if (modulos.count() > 0) {
             return;
         }
 
-        // ---------- Módulo 1: Fundamentos de Python ----------
         Modulo m1 = crearModulo("Fundamentos de Python", "🐍",
                 "Aprende las bases del lenguaje: variables, tipos de datos, texto y operadores.", 1);
 
@@ -181,7 +162,6 @@ public class DataSeeder implements CommandLineRunner {
         examen(m1, 3, "¿Qué hace \"ab\" + \"cd\" en Python?",
                 "Suma 0", "Une las cadenas: \"abcd\"", "Da un error", "Repite \"ab\"", 1);
 
-        // ---------- Módulo 2: Control de flujo ----------
         Modulo m2 = crearModulo("Control de flujo", "🔀",
                 "Toma decisiones con condicionales y repite acciones con bucles.", 2);
 
@@ -208,7 +188,6 @@ public class DataSeeder implements CommandLineRunner {
         examen(m2, 3, "¿Qué palabra clave repite mientras una condición sea verdadera?",
                 "for", "repeat", "while", "loop", 2);
 
-        // ---------- Módulo 3: Datos y algoritmos ----------
         Modulo m3 = crearModulo("Datos y algoritmos", "🧮",
                 "Organiza información con listas y funciones, y resuelve algoritmos clásicos.", 3);
 

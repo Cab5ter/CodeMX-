@@ -4,10 +4,6 @@ import mx.codemx.modules.envios.EnvioAceptadoEvent;
 import mx.codemx.modules.envios.EnvioObserver;
 import org.springframework.stereotype.Component;
 
-/**
- * Observador concreto (Observer): cuando Envíos publica un envío ACEPTADO, el módulo
- * Ranking reacciona registrando el acierto (que a su vez consulta los puntos a Retos).
- */
 @Component
 public class RankingEnvioObserver implements EnvioObserver {
 

@@ -26,7 +26,6 @@ export default function ModuloDetalle() {
         ← Todos los cursos
       </Link>
 
-      {/* Cabecera */}
       <div className="flex items-start gap-4 mb-6">
         <span className="text-5xl">{modulo.icono}</span>
         <div className="flex-1">
@@ -35,7 +34,6 @@ export default function ModuloDetalle() {
         </div>
       </div>
 
-      {/* Progreso */}
       <div className="bg-gray-900 border border-gray-800 rounded-xl p-5 mb-6">
         <div className="flex justify-between text-sm mb-2">
           <span className="text-gray-400">{modulo.leccionesCompletadas} de {modulo.totalLecciones} lecciones completadas</span>
@@ -44,14 +42,12 @@ export default function ModuloDetalle() {
         <BarraProgreso progreso={modulo.progreso} />
       </div>
 
-      {/* Lecciones */}
       <div className="space-y-2 mb-6">
         {modulo.lecciones.map((l, i) => {
           const destino = l.tipo === 'EJERCICIO' ? `/retos/${l.retoId}` : `/lecciones/${l.id}`
           return (
             <Link key={l.id} to={destino} className="group block">
               <div className="flex items-center gap-4 bg-gray-900 border border-gray-800 rounded-xl px-5 py-4 hover:border-gray-700 transition-all">
-                {/* Estado */}
                 <div className={`flex items-center justify-center w-8 h-8 rounded-full flex-shrink-0 text-sm font-bold ${
                   l.completada
                     ? 'bg-emerald-500 text-gray-950'
@@ -76,7 +72,6 @@ export default function ModuloDetalle() {
         })}
       </div>
 
-      {/* Examen */}
       <div className={`rounded-xl border p-5 ${
         modulo.examenDesbloqueado
           ? 'bg-emerald-500/5 border-emerald-500/40'

@@ -56,7 +56,6 @@ export async function enviarSolucion({ usuarioId, retoId, codigoFuente }) {
   return res.json()
 }
 
-// ---------- Módulo Cursos (aprendizaje) ----------
 
 function usuarioParam(usuarioId) {
   return usuarioId ? `?usuarioId=${usuarioId}` : ''

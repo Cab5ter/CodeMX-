@@ -1,5 +1,3 @@
-// Manejo simple de sesión en localStorage. Dispara un evento 'sesion' para que el navbar
-// (u otros componentes) se actualicen al entrar o salir sin recargar la página.
 
 export function getSesion() {
   const id = localStorage.getItem('usuarioId')

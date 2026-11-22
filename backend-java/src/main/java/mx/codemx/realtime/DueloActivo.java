@@ -2,10 +2,6 @@ package mx.codemx.realtime;
 
 import mx.codemx.modules.duelos.ProblemaDuelo;
 
-/**
- * Estado en memoria de un duelo en curso: conexiones, jugadores, el problema (con sus
- * casos de prueba, que jamás salen del servidor) y quién ganó. Vive mientras dura el duelo.
- */
 public class DueloActivo {
 
     private final long dueloId;
@@ -42,7 +38,6 @@ public class DueloActivo {
         return ganadorId;
     }
 
-    /** Fija al ganador de forma atómica. Devuelve true sólo la primera vez. */
     public synchronized boolean intentarGanar(long usuarioId) {
         if (ganadorId != null) {
             return false;
@@ -55,7 +50,6 @@ public class DueloActivo {
         return usuarioId == jugador1.usuarioId() ? jugador1.nombre() : jugador2.nombre();
     }
 
-    /** El rival de la conexión dada. */
     public JugadorEnEspera rivalDe(String connectionId) {
         return jugador1.connectionId().equals(connectionId) ? jugador2 : jugador1;
     }

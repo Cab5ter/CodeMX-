@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-/** Gateway / API REST → módulo Ranking. */
 @RestController
 @RequestMapping("/api/ranking")
 @Tag(name = "Ranking")
