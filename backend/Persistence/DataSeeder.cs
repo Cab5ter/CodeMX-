@@ -70,7 +70,7 @@ public static class DataSeeder
             Dificultad.BASICO,
             ("", "25"));
 
-        // --- INTERMEDIO: una entrada simple con input() y condicionales ---
+        // --- INTERMEDIO: lectura de una entrada y condicionales ---
         CrearReto(db, "El doble",
             "Lee un número entero e imprime su doble.\n\nEntrada: un entero.\nSalida: el número multiplicado por 2.",
             Dificultad.INTERMEDIO,
@@ -138,7 +138,7 @@ public static class DataSeeder
 
         // ---------- Módulo 1: Fundamentos de Python ----------
         var m1 = CrearModulo(db, "Fundamentos de Python", "🐍",
-            "Aprende las bases del lenguaje: variables, datos, entrada/salida y operadores.", 1);
+            "Aprende las bases del lenguaje: variables, tipos de datos y operadores.", 1);
 
         Teoria(db, m1, 1, "Variables y tipos de datos",
             "Una variable es un nombre que guarda un valor. En Python no declaras el tipo: " +
@@ -149,26 +149,16 @@ public static class DataSeeder
             "edad = 20          # int\npromedio = 8.5     # float\nnombre = \"Ana\"     # str\n\n" +
             "print(nombre, \"tiene\", edad, \"años\")");
 
-        Teoria(db, m1, 2, "Entrada y salida: input() y print()",
-            "Para mostrar información usas print(). Para leer lo que el usuario escribe usas input().\n\n" +
-            "input() SIEMPRE devuelve texto (str). Si necesitas un número, conviértelo con int() o float().\n\n" +
-            "Para leer varios valores de una línea separados por espacio se combina input().split() con map(). " +
-            "Este patrón es clave para resolver los ejercicios de CodeMX.",
-            "# Leer un número\nn = int(input())\n\n# Leer dos números: \"3 5\"\na, b = map(int, input().split())\nprint(a + b)");
-
-        Teoria(db, m1, 3, "Operadores aritméticos",
+        Teoria(db, m1, 2, "Operadores aritméticos",
             "Python incluye:\n• +  suma\n• -  resta\n• *  multiplicación\n• /  división (float)\n" +
             "• // división entera\n• %  módulo (residuo)\n• ** potencia\n\n" +
             "El operador % es muy útil: un número es par si n % 2 == 0.",
             "print(7 / 2)    # 3.5\nprint(7 // 2)   # 3\nprint(7 % 2)    # 1\nprint(2 ** 10)  # 1024");
 
-        Ejercicio(db, m1, 4, "Practica: Suma de dos números", "Suma de dos números");
+        Ejercicio(db, m1, 3, "Practica: Suma de dos números", "Suma de dos números");
 
-        Examen(db, m1, 1, "¿Qué tipo de dato devuelve siempre la función input()?", "int", "str", "float", "bool", 1);
-        Examen(db, m1, 2, "¿Cuál es el resultado de 7 % 3?", "2", "1", "3", "0", 1);
-        Examen(db, m1, 3, "¿Cómo lees dos enteros en la misma línea separados por espacio?",
-            "a = int(input()); b = int(input())", "a, b = map(int, input().split())",
-            "a, b = input()", "a, b = int(input().split())", 1);
+        Examen(db, m1, 1, "¿Cuál es el resultado de 7 % 3?", "2", "1", "3", "0", 1);
+        Examen(db, m1, 2, "¿Qué función muestra información en pantalla?", "type()", "print()", "len()", "show()", 1);
 
         // ---------- Módulo 2: Control de flujo ----------
         var m2 = CrearModulo(db, "Control de flujo", "🔀",
@@ -179,13 +169,13 @@ public static class DataSeeder
             "indentación (4 espacios), no por llaves.\n\n• if: si la condición es verdadera\n" +
             "• elif: prueba otra condición\n• else: si ninguna se cumplió\n\n" +
             "Comparadores: == != < > <= >=.",
-            "n = int(input())\n\nif n > 0:\n    print(\"positivo\")\nelif n < 0:\n    print(\"negativo\")\nelse:\n    print(\"cero\")");
+            "n = -4\n\nif n > 0:\n    print(\"positivo\")\nelif n < 0:\n    print(\"negativo\")\nelse:\n    print(\"cero\")");
 
         Teoria(db, m2, 2, "Bucles: for y while",
             "• for se usa cuando sabes cuántas veces repetir. range(1, n+1) genera de 1 a n.\n" +
             "• while repite mientras una condición sea verdadera.\n\n" +
             "Recuerda que range(a, b) NO incluye b.",
-            "n = int(input())\n\nfor i in range(1, n + 1):\n    print(i)");
+            "n = 5\n\nfor i in range(1, n + 1):\n    print(i)");
 
         Ejercicio(db, m2, 3, "Practica: FizzBuzz", "FizzBuzz");
         Ejercicio(db, m2, 4, "Practica: Número palíndromo", "Número palíndromo");
@@ -204,7 +194,7 @@ public static class DataSeeder
             "Una lista guarda varios valores en orden, entre corchetes y separados por comas. Se accede por " +
             "índice empezando en 0.\n\n• lista.append(x): agrega al final\n• len(lista): cantidad\n" +
             "• lista[i]: elemento en la posición i\n\n" +
-            "Para convertir una línea de números en lista: list(map(int, input().split())).",
+            "Puedes recorrer una lista con un bucle for para procesar cada elemento.",
             "numeros = [10, 20, 30]\nnumeros.append(40)\n\nprint(numeros[0])     # 10\nprint(len(numeros))   # 4");
 
         Teoria(db, m3, 2, "Funciones",
