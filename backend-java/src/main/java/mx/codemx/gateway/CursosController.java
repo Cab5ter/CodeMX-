@@ -30,20 +30,20 @@ public class CursosController {
     }
 
     @GetMapping
-    public List<ModuloResumen> listar(@RequestParam(required = false) Long usuarioId) {
-        return cursos.listarModulos(usuarioId);
+    public ResponseEntity<List<ModuloResumen>> listar(@RequestParam(required = false) Long usuarioId) {
+        return ResponseEntity.ok(cursos.listarModulos(usuarioId));
     }
 
     @GetMapping("/modulos/{moduloId}")
-    public ModuloDetalle obtenerModulo(@PathVariable long moduloId,
-                                       @RequestParam(required = false) Long usuarioId) {
-        return cursos.obtenerModulo(moduloId, usuarioId);
+    public ResponseEntity<ModuloDetalle> obtenerModulo(@PathVariable long moduloId,
+                                                       @RequestParam(required = false) Long usuarioId) {
+        return ResponseEntity.ok(cursos.obtenerModulo(moduloId, usuarioId));
     }
 
     @GetMapping("/lecciones/{leccionId}")
-    public LeccionDetalle obtenerLeccion(@PathVariable long leccionId,
-                                         @RequestParam(required = false) Long usuarioId) {
-        return cursos.obtenerLeccion(leccionId, usuarioId);
+    public ResponseEntity<LeccionDetalle> obtenerLeccion(@PathVariable long leccionId,
+                                                         @RequestParam(required = false) Long usuarioId) {
+        return ResponseEntity.ok(cursos.obtenerLeccion(leccionId, usuarioId));
     }
 
     @PostMapping("/lecciones/{leccionId}/completar")
@@ -53,13 +53,13 @@ public class CursosController {
     }
 
     @GetMapping("/modulos/{moduloId}/examen")
-    public List<PreguntaVista> examen(@PathVariable long moduloId, @RequestParam long usuarioId) {
-        return cursos.obtenerExamen(moduloId, usuarioId);
+    public ResponseEntity<List<PreguntaVista>> examen(@PathVariable long moduloId, @RequestParam long usuarioId) {
+        return ResponseEntity.ok(cursos.obtenerExamen(moduloId, usuarioId));
     }
 
     @PostMapping("/modulos/{moduloId}/examen")
-    public ResultadoExamen calificar(@PathVariable long moduloId, @RequestParam long usuarioId,
-                                     @RequestBody Map<Long, Integer> respuestas) {
-        return cursos.calificarExamen(moduloId, usuarioId, respuestas);
+    public ResponseEntity<ResultadoExamen> calificar(@PathVariable long moduloId, @RequestParam long usuarioId,
+                                                     @RequestBody Map<Long, Integer> respuestas) {
+        return ResponseEntity.ok(cursos.calificarExamen(moduloId, usuarioId, respuestas));
     }
 }
