@@ -43,10 +43,9 @@ public class DataSeeder implements CommandLineRunner {
     }
 
     private void seedRetos() {
-        String primero = retos.findAllByOrderByIdAsc().stream()
-                .findFirst()
-                .map(Reto::getTitulo)
-                .orElse(null);
+        String primero = jdbc.query(
+                "SELECT titulo FROM retos.retos ORDER BY id ASC LIMIT 1",
+                rs -> rs.next() ? rs.getString(1) : null);
         if ("Hola, Mundo".equals(primero)) {
             return;
         }
