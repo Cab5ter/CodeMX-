@@ -141,6 +141,12 @@ public class CursoService implements CursosApi {
     }
 
 
+    @Override
+    @Transactional(readOnly = true)
+    public boolean algunaLeccionUsaReto(long retoId) {
+        return lecciones.existsByRetoId(retoId);
+    }
+
     private void exigirExamenDesbloqueado(long moduloId, long usuarioId) {
         if (!obtenerModulo(moduloId, usuarioId).examenDesbloqueado()) {
             throw new ExamenBloqueadoException("Debes completar al menos " + UMBRAL_EXAMEN

@@ -21,4 +21,6 @@ public interface CursosApi {
     List<PreguntaVista> obtenerExamen(long moduloId, long usuarioId);
 
     ResultadoExamen calificarExamen(long moduloId, long usuarioId, Map<Long, Integer> respuestas);
+
+    boolean algunaLeccionUsaReto(long retoId);
 }
