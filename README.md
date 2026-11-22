@@ -10,23 +10,33 @@ y competir en un ranking.
 | Capa | Tecnología |
 |------|------------|
 | Frontend | React 18 + Vite 5 + Tailwind CSS + React Router |
-| Backend | ASP.NET Core Web API (C#, **.NET 10**) |
-| Persistencia | Entity Framework Core + Npgsql (**PostgreSQL**), un esquema por módulo |
-| Documentación de la API | Swagger / OpenAPI (Swashbuckle) |
+| Backend | Spring Boot 4.1 sobre **Java 25**, compilado con Maven |
+| Persistencia | Spring Data JPA / Hibernate + PostgreSQL, un esquema por módulo |
+| Documentación de la API | OpenAPI 3 con springdoc (`/swagger`) |
+| Tiempo real | WebSocket nativo de Spring, en `/api/hub/duelos` |
+| Generación de problemas | SDK oficial `anthropic-java` (API de Claude), con respaldo sembrado |
 | Evaluador de código | Servicio Python externo por HTTP (opcional; hay estrategia local de respaldo) |
 
 Es un **monolito modular**: el backend se divide en módulos por dominio
-(`usuarios`, `retos`, `envios`, `evaluacion`, `ranking`, `cursos`), cada uno con
-su interfaz pública. Ver las decisiones de arquitectura en los archivos `ADR-0X-*.md`.
+(`usuarios`, `retos`, `envios`, `evaluacion`, `ranking`, `cursos`, `duelos`), cada uno con
+su interfaz pública (`…Api`) que esconde su `Service` y su `Repository`. Cada módulo tiene
+además **su propio esquema de PostgreSQL**. Ver las decisiones de arquitectura en los
+archivos `ADR-0X-*.md`; el stack vigente es el del **ADR-05**.
 
 ### Patrones de diseño (GoF) en el backend
 
-- **Strategy** — `IEvaluacionStrategy` con dos implementaciones intercambiables:
+- **Strategy** — `EvaluacionStrategy` con dos implementaciones intercambiables:
   `EvaluacionRemotaStrategy` (servicio Python) y `EvaluacionLocalStrategy`.
 - **Factory Method** — `EvaluadorStrategyFactory` crea la estrategia según
   `TipoEvaluacion`; el servicio intenta la remota y cae a la local.
 - **Observer** — el módulo *Envíos* publica un evento cuando un envío es aceptado;
   `RankingEnvioObserver` se suscribe y actualiza el ranking, sin acoplar Envíos a Ranking.
+- **Decorator** — `EvaluacionDecorator` envuelve cualquier `EvaluacionStrategy` y le añade
+  comportamiento sin modificarla ni heredar de ella: `EvaluacionConValidacionDecorator`
+  rechaza código vacío o que excede el límite configurado antes de ejecutarlo, y
+  `EvaluacionConMetricasDecorator` mide el tiempo real de la evaluación y registra el
+  veredicto. La *factory* compone ambos al crear la estrategia, de modo que las decoraciones
+  aplican por igual a la remota y a la local.
 
 ---
 
@@ -46,12 +56,13 @@ como una contraseña en texto plano:
 
 - `frontend/src/pages/Registro.jsx` y `frontend/src/pages/Login.jsx` capturan la
   contraseña en `passwordHash` y la envían directamente a la API.
-- `backend/Modules/Usuarios/UsuarioService.cs` autentica mediante la comparación
-  `usuario.PasswordHash == passwordHash`; no existe una función de hash ni una
-  verificación criptográfica.
-- `backend/Gateway/UsuariosController.cs` devuelve la entidad `Usuario` completa en
-  las operaciones de creación, consulta, listado e inicio de sesión. Por lo tanto, el
-  campo `PasswordHash` forma parte de las respuestas JSON.
+- `backend-java/src/main/java/mx/codemx/modules/usuarios/UsuarioService.java` autentica
+  con la comparación `u.getPasswordHash().equals(passwordHash)`; no existe una función
+  de hash ni una verificación criptográfica.
+- `backend-java/src/main/java/mx/codemx/gateway/UsuariosController.java` devuelve el
+  objeto `UsuarioDominio` completo en creación, consulta, listado e inicio de sesión, y
+  ese objeto incluye `passwordHash`. Por lo tanto, la credencial forma parte de las
+  respuestas JSON.
 - No existe un mecanismo de sesión o token. El frontend conserva únicamente el objeto
   del usuario y otras operaciones confían en identificadores de usuario enviados por
   el cliente.
@@ -71,30 +82,31 @@ todos los usuarios.
 #### Propuesta concreta de solución
 
 1. **Separar contratos y entidad.** Crear DTOs específicos: `RegistroRequest`,
-   `LoginRequest` y `UsuarioResponse`. Los DTOs de entrada recibirán `Password`; el DTO
-   de salida solo expondrá `Id`, `Nombre`, `Email` y `CreadoEn`. La entidad de
-   persistencia conservará `PasswordHash`, marcado además con `[JsonIgnore]` como
+   `LoginRequest` y `UsuarioResponse`. Los DTOs de entrada recibirán `password`; el DTO
+   de salida solo expondrá `id`, `nombre`, `email` y `fechaRegistro`. La entidad de
+   persistencia conservará `passwordHash`, marcado además con `@JsonIgnore` como
    defensa adicional.
-2. **Aplicar hash seguro en el servidor.** Incorporar `IPasswordHasher<Usuario>` de
-   ASP.NET Core Identity (PBKDF2 con salt por usuario). Al registrar, guardar el
-   resultado de `HashPassword`; al iniciar sesión, usar `VerifyHashedPassword`. La
-   contraseña nunca se debe registrar en logs, devolver por JSON ni persistir sin hash.
-3. **Implementar autenticación.** Emitir un token JWT de corta duración después de un
-   login válido, configurar `AddAuthentication().AddJwtBearer()` y proteger las rutas
-   privadas con `[Authorize]`. El backend debe tomar el identificador del usuario desde
-   los *claims* del token, no desde un valor confiado al cliente.
+2. **Aplicar hash seguro en el servidor.** Agregar `spring-boot-starter-security` y
+   registrar un `PasswordEncoder` (`BCryptPasswordEncoder`, que genera un salt por
+   usuario). Al registrar, guardar `encoder.encode(password)`; al iniciar sesión, usar
+   `encoder.matches(password, hashGuardado)`. La contraseña nunca se debe registrar en
+   logs, devolver por JSON ni persistir sin hash.
+3. **Implementar autenticación.** Emitir un token JWT de corta duración tras un login
+   válido, configurar una `SecurityFilterChain` con `oauth2ResourceServer().jwt()` y
+   exigir autenticación en las rutas privadas. El backend debe tomar el identificador
+   del usuario desde los *claims* del token, no desde un valor confiado al cliente.
 4. **Migrar datos existentes.** Como no es posible transformar contraseñas planas en
    hashes sin conocer de forma segura su procedencia, invalidar las credenciales
-   actuales y solicitar restablecimiento. Agregar una migración de EF Core que limite
-   la longitud y nulabilidad de `PasswordHash`; sustituir `EnsureCreated()` por
-   `Database.Migrate()` para que el cambio sea reproducible.
-5. **Añadir pruebas automatizadas.** Cubrir registro, login correcto e incorrecto,
-   respuestas sin `PasswordHash`, acceso sin token (`401`) y rechazo de un `usuarioId`
-   que no coincida con el sujeto autenticado.
+   actuales y solicitar restablecimiento. Sustituir `ddl-auto: update` por **Flyway**
+   con migraciones versionadas, para que el cambio de esquema sea reproducible y no
+   quede a merced de lo que Hibernate infiera al arrancar.
+5. **Añadir pruebas automatizadas.** Con `spring-boot-starter-test` y `MockMvc`, cubrir
+   registro, login correcto e incorrecto, respuestas sin `passwordHash`, acceso sin
+   token (`401`) y rechazo de un `usuarioId` que no coincida con el sujeto autenticado.
 
 #### Criterios de aceptación
 
-- Ninguna respuesta de `/api/usuarios` contiene `Password` ni `PasswordHash`.
+- Ninguna respuesta de `/api/usuarios` contiene `password` ni `passwordHash`.
 - La contraseña almacenada no coincide con la recibida y se valida mediante un
   algoritmo de hash con salt.
 - Las rutas privadas responden `401` sin un token válido y `403` cuando el usuario no
@@ -109,18 +121,20 @@ todos los usuarios.
 |------|---------|------------|
 | 1 | DTOs, ocultamiento de credenciales y hash de contraseñas | 1 día |
 | 2 | JWT, autorización de endpoints y adaptación del frontend | 2 días |
-| 3 | Migración, pruebas de integración y documentación de configuración | 1–2 días |
+| 3 | Migraciones con Flyway, pruebas de integración y documentación de configuración | 1–2 días |
 
 **Estimación total:** 4–5 días de desarrollo. El trabajo puede dividirse en entregas,
 pero las fases 1 y 2 deben desplegarse juntas para no mantener contratos inseguros.
 
 ### Riesgo técnico relacionado — ejecución local de código
 
-`backend/Modules/Evaluacion/EvaluacionLocalStrategy.cs` escribe código proporcionado
-por el usuario en un archivo temporal y lo ejecuta con `python3` en el mismo sistema
-operativo que la API. El límite de tiempo detiene procesos largos, pero no restringe
-acceso a archivos, red, memoria, CPU ni llamadas al sistema. Por ello, esta estrategia
-de respaldo no debe habilitarse en un entorno compartido o de producción.
+`backend-java/src/main/java/mx/codemx/modules/evaluacion/EvaluacionLocalStrategy.java`
+escribe código proporcionado por el usuario en un archivo temporal y lo ejecuta con
+`python3` mediante `ProcessBuilder`, en el mismo sistema operativo que la API. El límite
+de tiempo (`evaluador.timeout-ms`) detiene procesos largos, y `EvaluacionConValidacionDecorator`
+acota el tamaño del código (`evaluador.limite-caracteres`), pero **nada restringe acceso a
+archivos, red, memoria, CPU ni llamadas al sistema**. Por ello, esta estrategia de respaldo
+no debe habilitarse en un entorno compartido o de producción.
 
 La remediación propuesta es ejecutar cada evaluación en un *sandbox* aislado
 (contenedor efímero sin red, usuario sin privilegios, sistema de archivos de solo
@@ -136,23 +150,32 @@ puede leer archivos del host, abrir conexiones ni exceder los recursos asignados
 
 ### Requisitos previos
 
-- [.NET SDK 10](https://dotnet.microsoft.com/download) (`dotnet --version`)
+- [JDK 25](https://adoptium.net/) (`java -version`)
+- [Maven 3.9+](https://maven.apache.org/) (`mvn -v`), o el wrapper del proyecto
 - [Node.js 18+](https://nodejs.org/) y npm (`node --version`)
 - [PostgreSQL](https://www.postgresql.org/) corriendo en `localhost:5432`
-  - Base/usuario por defecto: `Database=codemx_api`, `Username=postgres`, sin contraseña.
-  - Ajusta la cadena de conexión en `backend/appsettings.json` si tu Postgres es distinto.
-  - El backend **crea las tablas y siembra retos de ejemplo automáticamente** al arrancar
-    (`EnsureCreated` + `DataSeeder`), no hace falta correr migraciones a mano.
+  - Base/usuario por defecto: base `codemx_spring`, usuario `postgres`, sin contraseña.
+  - Ajusta `spring.datasource.*` en `backend-java/src/main/resources/application.yml`
+    si tu Postgres es distinto.
+  - El backend **crea los esquemas y las tablas y siembra retos y cursos de ejemplo
+    automáticamente** al arrancar (`ddl-auto: update` + `DataSeeder`), no hace falta
+    correr migraciones a mano.
+- *(Opcional)* `ANTHROPIC_API_KEY` en el entorno, para que los duelos generen su
+  problema con la API de Claude. Sin ella se usan retos sembrados de respaldo.
 
-### 1) Backend (.NET)
+### 1) Backend (Java + Spring Boot)
 
 ```bash
-cd backend
-dotnet run
+cd backend-java
+mvn spring-boot:run
 ```
 
 Queda escuchando en `http://0.0.0.0:8080`.
 Documentación interactiva de la API: `http://localhost:8080/swagger`
+
+> Las tablas **no viven en el esquema `public`**: cada módulo tiene el suyo
+> (`usuarios`, `retos`, `envios`, `cursos`, `ranking`, `duelos`). Para consultarlas hay que
+> calificar el nombre, por ejemplo `SELECT * FROM usuarios.usuarios;`.
 
 ### 2) Frontend (React + Vite)
 
@@ -182,9 +205,9 @@ servidores se configuraron para escuchar en `0.0.0.0` (todas las interfaces de r
 
 | Archivo | Cambio | Por qué |
 |---------|--------|---------|
-| `backend/appsettings.json` | `Urls`: `http://localhost:8080` → `http://0.0.0.0:8080` | Que Kestrel acepte conexiones de cualquier interfaz, no solo la local. |
-| `backend/Properties/launchSettings.json` | `applicationUrl` → `http://0.0.0.0:8080`; `launchBrowser` → `false` | `launchSettings` define `ASPNETCORE_URLS` al usar `dotnet run` y **tiene prioridad** sobre `appsettings.json`; había que cambiarlo aquí también. |
+| `backend-java/src/main/resources/application.yml` | `server.address: 0.0.0.0` | Que Tomcat acepte conexiones de cualquier interfaz, no solo la local. |
 | `frontend/vite.config.js` | Añadido `server.host: true` | Hace que Vite escuche en `0.0.0.0` y exponga la URL de red. El *proxy* sigue apuntando a `localhost:8080` porque corre en la misma máquina que el backend. |
+| `frontend/vite.config.js` | Añadido `ws: true` al *proxy* de `/api` | Los duelos viajan por WebSocket en `/api/hub/duelos`; sin esta bandera Vite no reenvía la conexión. |
 
 ### Cómo usarlo
 
@@ -197,8 +220,8 @@ servidores se configuraron para escuchar en `0.0.0.0` (todas las interfaces de r
    ```
    http://<IP-DEL-SERVIDOR>:5173
    ```
-   El navegador externo llega a Vite (5173), que reenvía `/api` al backend .NET (8080),
-   que consulta PostgreSQL. Toda la cadena funciona sin tocar más código.
+   El navegador externo llega a Vite (5173), que reenvía `/api` al backend de Spring Boot
+   (8080), que consulta PostgreSQL. Toda la cadena funciona sin tocar más código.
 
 > **Swagger directo** (opcional): `http://<IP-DEL-SERVIDOR>:8080/swagger`
 
@@ -210,7 +233,7 @@ servidores se configuraron para escuchar en `0.0.0.0` (todas las interfaces de r
   # o:  sudo firewall-cmd --add-port=5173/tcp --add-port=8080/tcp       # firewalld
   ```
 - Verifica que ambas máquinas estén en la **misma red** (no una en Wi-Fi de invitados).
-- Confirma que el backend imprima `Now listening on: http://0.0.0.0:8080` al arrancar.
+- Confirma que el backend imprima `Tomcat started on port 8080` al arrancar.
 
 > Nota: esto habilita el acceso en **red local (LAN)**. Para exponerlo a **internet**
 > se necesita un túnel (`ngrok`, `cloudflared`) o un despliegue en la nube.
@@ -221,18 +244,29 @@ servidores se configuraron para escuchar en `0.0.0.0` (todas las interfaces de r
 
 ```
 CodeMX-/
-├── ADR-0X-*.md          Architecture Decision Records (decisiones de diseño)
-├── backend/             API ASP.NET Core (.NET 10)
-│   ├── Controllers/     (vacío; los controllers viven en Gateway)
-│   ├── Gateway/         Controllers REST por recurso (entrada de la API)
-│   ├── Modules/         Módulos por dominio (Usuarios, Retos, Envios, Evaluacion, Ranking, Cursos)
-│   ├── Persistence/     DbContext de EF Core + sembrado de datos
-│   ├── Program.cs       Composición: DI, CORS, Swagger, arranque
-│   └── appsettings.json Configuración (URL, conexión a Postgres, evaluador)
-└── frontend/            App React + Vite
-    ├── src/api/         Cliente HTTP hacia /api
-    ├── src/pages/       Páginas (Inicio, Cursos, Reto, Examen, Ranking…)
-    └── vite.config.js   Servidor de desarrollo + proxy a /api
+├── ADR-0X-*.md              Architecture Decision Records (decisiones de diseño)
+├── backend-java/            API Spring Boot 4.1 (Java 25, Maven)
+│   ├── pom.xml              Dependencias y compilación
+│   └── src/main/
+│       ├── java/mx/codemx/
+│       │   ├── config/      Configuración transversal (CORS)
+│       │   ├── gateway/     Controllers REST por recurso + manejadores de excepciones
+│       │   ├── modules/     Un paquete por dominio; cada uno expone su interfaz …Api
+│       │   │   ├── usuarios/    Cuentas y autenticación
+│       │   │   ├── retos/       Catálogo y casos de prueba
+│       │   │   ├── envios/      Envíos de código (sujeto del Observer)
+│       │   │   ├── evaluacion/  Strategy + Factory Method + Decorator
+│       │   │   ├── ranking/     Tabla de posiciones (observador)
+│       │   │   ├── cursos/      Módulos, lecciones y exámenes
+│       │   │   └── duelos/      Duelos 1v1 y generación de problemas
+│       │   ├── persistence/ Sembrado de datos de ejemplo
+│       │   └── realtime/    WebSocket de duelos y emparejamiento
+│       └── resources/
+│           └── application.yml  Puerto, conexión a Postgres, evaluador
+└── frontend/                App React + Vite
+    ├── src/api/             Cliente HTTP hacia /api y cliente WebSocket
+    ├── src/pages/           Páginas (Inicio, Cursos, Reto, Examen, Ranking…)
+    └── vite.config.js       Servidor de desarrollo + proxy a /api
 ```
 
 ---
@@ -284,8 +318,8 @@ flowchart TB
 
     subgraph codemx["CodeMX"]
         spa["SPA Frontend<br/><i>React 18 + Vite 5 + Tailwind</i>"]
-        api["API REST<br/><i>ASP.NET Core .NET 10 · monolito modular</i>"]
-        db[("Base de datos<br/><i>PostgreSQL · EF Core / Npgsql</i>")]
+        api["API REST<br/><i>Spring Boot 4.1 · Java 25 · monolito modular</i>"]
+        db[("Base de datos<br/><i>PostgreSQL · JPA / Hibernate</i>")]
     end
 
     pyeval["Evaluador Python"]
@@ -293,8 +327,8 @@ flowchart TB
 
     est -->|"HTTPS"| spa
     spa -->|"datos · REST HTTP/JSON (/api/*)"| api
-    spa -.->|"duelos en tiempo real · WebSocket (SignalR)"| api
-    api -->|"lee/escribe · EF Core"| db
+    spa -.->|"duelos en tiempo real · WebSocket (/api/hub/duelos)"| api
+    api -->|"lee/escribe · JPA"| db
     api -->|"evalúa envíos · HTTP/JSON"| pyeval
     api -->|"genera problemas · SDK"| claude
 
@@ -303,28 +337,28 @@ flowchart TB
 ```
 
 **Lectura:** son **tres contenedores propios**. El **SPA de React** solo pinta la interfaz
-y llama al backend por el proxy `/api`. La **API .NET** concentra la lógica y habla con la
-**base PostgreSQL** (EF Core), el **evaluador Python** (HTTP) y la **API de Claude** (SDK).
-Los duelos usan un canal aparte en **tiempo real (SignalR/WebSocket)**, no REST.
+y llama al backend por el proxy `/api`. La **API de Spring Boot** concentra la lógica y habla
+con la **base PostgreSQL** (JPA/Hibernate), el **evaluador Python** (HTTP) y la **API de
+Claude** (SDK). Los duelos usan un canal aparte en **tiempo real (WebSocket)**, no REST.
 
 ## Nivel 3 — Componentes (dentro de la API REST)
 
 > **¿Para quién es?** Para quien programa dentro del backend. **¿Qué pregunta responde?**
 > *¿Qué controladores, servicios de dominio y patrones de diseño forman la API y cómo
 > colaboran?* Aquí se ven los **patrones GoF** implementados: **Strategy**, **Factory
-> Method** y **Observer**.
+> Method**, **Observer** y **Decorator**.
 
 ```mermaid
 flowchart TB
     est(["👤 Estudiante"])
 
-    subgraph api["API REST · ASP.NET Core (.NET 10)"]
+    subgraph api["API REST · Spring Boot 4.1 (Java 25)"]
         direction TB
         subgraph entrada["Entrada (Gateway)"]
-            gw["Gateway / Controllers<br/><i>REST</i>"]
-            hub["DueloHub + MatchmakingService<br/><i>SignalR</i>"]
+            gw["Gateway / Controllers<br/><i>REST + @RestControllerAdvice</i>"]
+            hub["DueloWebSocketHandler + MatchmakingService<br/><i>WebSocket</i>"]
         end
-        subgraph dominio["Módulos de dominio · I…Api → Service → Repository"]
+        subgraph dominio["Módulos de dominio · …Api → Service → Repository"]
             usuarios["Usuarios"]
             retos["Retos"]
             cursos["Cursos"]
@@ -333,15 +367,16 @@ flowchart TB
             duelos["Duelos"]
             eval["Evaluación"]
         end
-        subgraph patrones["Evaluación · Strategy + Factory Method"]
+        subgraph patrones["Evaluación · Strategy + Factory Method + Decorator"]
             factory["EvaluadorStrategyFactory<br/><i>Factory Method</i>"]
+            deco["EvaluacionConValidacionDecorator<br/>▸ EvaluacionConMetricasDecorator<br/><i>Decorator</i>"]
             stratR["EvaluacionRemotaStrategy<br/><i>Strategy</i>"]
             stratL["EvaluacionLocalStrategy<br/><i>Strategy</i>"]
         end
         gen["GeneradorProblemas<br/><i>Strategy + fallback (Claude → sembrado)</i>"]
     end
 
-    db[("PostgreSQL<br/><i>EF Core</i>")]
+    db[("PostgreSQL<br/><i>JPA / Hibernate · un esquema por módulo</i>")]
     pyeval["Evaluador Python"]
     claude["Claude API"]
 
@@ -351,16 +386,17 @@ flowchart TB
     gw --> usuarios & retos & cursos & envios & ranking
     hub --> duelos
 
-    envios -->|"IEvaluacionApi"| eval
-    envios -.->|"IEnvioObserver · envío ACEPTADO"| ranking
+    envios -->|"EvaluacionApi"| eval
+    envios -.->|"EnvioObserver · envío ACEPTADO"| ranking
     eval -->|"pide estrategia"| factory
-    factory -->|"crea"| stratR
-    factory -->|"crea (fallback)"| stratL
+    factory -->|"compone"| deco
+    deco -->|"envuelve"| stratR
+    deco -->|"envuelve (respaldo)"| stratL
     stratR -->|"HTTP"| pyeval
     duelos --> gen
     gen -->|"SDK"| claude
 
-    dominio -->|"EF Core"| db
+    dominio -->|"Spring Data JPA"| db
 
     classDef ext stroke-dasharray:4 4;
     class pyeval,claude ext;
@@ -368,26 +404,33 @@ flowchart TB
 
 **Lectura y patrones GoF:**
 
-- **Módulos.** Cada módulo expone una **interfaz pública** (`I…Api`) y esconde su
+- **Módulos.** Cada módulo expone una **interfaz pública** (`…Api`) y esconde su
   `Service` + `Repository`; los módulos se hablan solo por esas interfaces (monolito
   modular, ADR-03).
-- **Strategy** — `IEvaluacionStrategy` con dos implementaciones intercambiables:
+- **Strategy** — `EvaluacionStrategy` con dos implementaciones intercambiables:
   `EvaluacionRemotaStrategy` (evaluador Python) y `EvaluacionLocalStrategy` (respaldo). El
-  mismo patrón aparece en Duelos con `IGeneradorProblemas` (Claude vs. sembrado).
+  mismo patrón aparece en Duelos con `GeneradorProblemas` (Claude vs. sembrado).
 - **Factory Method** — `EvaluadorStrategyFactory` decide **qué** estrategia crear según el
   `TipoEvaluacion` e intenta la remota, cayendo a la local.
 - **Observer** — `EnvioService` (sujeto) publica `EnvioAceptadoEvent` al aceptar un envío
-  por primera vez; `RankingEnvioObserver` está suscrito como `IEnvioObserver` y actualiza
+  por primera vez; `RankingEnvioObserver` está suscrito como `EnvioObserver` y actualiza
   el ranking. Así **Envíos no conoce a Ranking** y podrían sumarse otros observadores
   (logros, notificaciones) sin tocar Envíos.
+- **Decorator** — `EvaluacionDecorator` implementa la misma interfaz que decora
+  (`EvaluacionStrategy`) y delega en la instancia envuelta. La *factory* devuelve
+  `EvaluacionConValidacionDecorator(EvaluacionConMetricasDecorator(estrategia))`: la
+  validación queda **afuera** para rechazar el envío antes de gastar recursos, y las
+  métricas **adentro** para medir solo la ejecución real. Ni las estrategias ni
+  `EvaluacionService` cambian, y agregar otra decoración (caché, reintentos, límite de
+  peticiones) es añadir una clase más a la cadena.
 
 ---
 
 ## Declaración de uso de IA
 
 Los **diagramas y textos de arquitectura** de este README se elaboraron con apoyo de
-**Claude Code (Claude Opus 4.8)**, a partir de la lectura del código real del repositorio
-(`Program.cs`, `backend/Modules/`, los controladores del `Gateway/` y el hub de tiempo
-real). El contenido se revisó para que refleje la arquitectura efectivamente implementada.
-El modelo C4 elegido y las decisiones de diseño descritas corresponden al autor del
-proyecto.
+**Claude Code**, a partir de la lectura del código real del repositorio
+(`CodeMxApplication.java`, `backend-java/src/main/java/mx/codemx/modules/`, los
+controladores del `gateway/` y el manejador de WebSocket de `realtime/`). El contenido se
+revisó para que refleje la arquitectura efectivamente implementada. El modelo C4 elegido y
+las decisiones de diseño descritas corresponden al autor del proyecto.
