@@ -7,7 +7,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-/** Traduce los errores de negocio del módulo Cursos a códigos HTTP. */
 @RestControllerAdvice(assignableTypes = CursosController.class)
 public class CursosExceptionHandler {
 
@@ -21,7 +20,6 @@ public class CursosExceptionHandler {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
     }
 
-    /** Completar una lección de ejercicio "a mano" es una petición inválida. */
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<String> peticionInvalida(IllegalArgumentException e) {
         return ResponseEntity.badRequest().body(e.getMessage());

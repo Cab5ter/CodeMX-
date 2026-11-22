@@ -18,12 +18,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-/**
- * Gateway / API REST → módulo Cursos (plataforma de aprendizaje).
- *
- * <p>Los errores de negocio (lección inexistente, examen bloqueado) los traduce a códigos
- * HTTP el {@link CursosExceptionHandler}, en lugar de repetir try/catch en cada endpoint.
- */
 @RestController
 @RequestMapping("/api/cursos")
 @Tag(name = "Cursos")

@@ -2,7 +2,6 @@ package mx.codemx.modules.evaluacion;
 
 import org.springframework.stereotype.Component;
 
-/** Implementación del Factory Method: resuelve la estrategia concreta por tipo. */
 @Component
 public class EvaluadorStrategyFactoryPorTipo implements EvaluadorStrategyFactory {
 

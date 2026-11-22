@@ -15,7 +15,6 @@ export default function Inicio() {
   const [filtro, setFiltro] = useState(null)
   const [cargando, setCargando] = useState(true)
 
-  // Total de retos para el contador, independiente del filtro activo.
   useEffect(() => {
     getRetos().then(r => setTotal(r.length)).catch(() => {})
   }, [])
@@ -35,7 +34,6 @@ export default function Inicio() {
 
   return (
     <div>
-      {/* Hero */}
       <div className="mb-10 py-8 border-b border-gray-800">
         <div className="flex items-center gap-2 mb-3">
           <span className="h-px w-8 bg-emerald-500" />
@@ -51,7 +49,6 @@ export default function Inicio() {
           Retos de programación en español, ordenados por dificultad y diseñados para estudiantes universitarios mexicanos.
         </p>
 
-        {/* Stats */}
         <div className="flex gap-8 mt-6">
           {STATS.map(s => (
             <div key={s.label}>
@@ -62,7 +59,6 @@ export default function Inicio() {
         </div>
       </div>
 
-      {/* Filtros */}
       <div className="flex items-center gap-2 mb-5">
         <span className="text-gray-500 text-sm mr-1">Filtrar:</span>
         {FILTROS.map(f => (
@@ -80,7 +76,6 @@ export default function Inicio() {
         ))}
       </div>
 
-      {/* Lista */}
       {cargando ? (
         <div className="space-y-3">
           {[1, 2, 3, 4].map(i => (

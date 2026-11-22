@@ -13,26 +13,13 @@ import mx.codemx.modules.retos.Dificultad;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/**
- * Implementación del módulo Duelos. Coordina persistencia, evaluación y ranking:
- * <ul>
- *   <li>reutiliza el Factory + Strategy del módulo Evaluación (estrategia local) para
- *       calificar el código contra los casos del problema;</li>
- *   <li>delega los puntos al módulo Ranking por su interfaz pública (nunca a su repositorio).</li>
- * </ul>
- */
 @Service
 @Transactional
 public class DueloService implements DuelosApi {
 
-    /** Puntos en juego en un duelo, según la dificultad. */
     public record PuntosDuelo(int ganar, int perder) {
     }
 
-    /**
-     * Puntos en juego según la dificultad: más fácil, menos se gana y menos se pierde;
-     * más difícil, más se gana pero también más se pierde.
-     */
     public static PuntosDuelo puntosPorDificultad(Dificultad dificultad) {
         return switch (dificultad) {
             case BASICO -> new PuntosDuelo(15, 5);
@@ -66,7 +53,6 @@ public class DueloService implements DuelosApi {
     @Override
     @Transactional(readOnly = true)
     public ResultadoEvaluacion evaluar(String codigoFuente, List<CasoPrueba> casos) {
-        // retoId = 0 porque los casos vienen del problema del duelo, no de un reto persistido.
         return evaluadores.crear(TipoEvaluacion.LOCAL)
                 .ejecutar(new SolicitudEvaluacion(0, codigoFuente), casos);
     }
@@ -80,7 +66,7 @@ public class DueloService implements DuelosApi {
 
         Duelo duelo = encontrado.get();
         if (duelo.getEstado() == EstadoDuelo.TERMINADO) {
-            return; // idempotente
+            return;
         }
 
         long perdedorId = duelo.getJugador1Id() == ganadorId ? duelo.getJugador2Id() : duelo.getJugador1Id();

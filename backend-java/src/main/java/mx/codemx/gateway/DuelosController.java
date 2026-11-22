@@ -9,10 +9,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-/**
- * Gateway / API REST → módulo Duelos. El duelo en vivo ocurre por WebSocket
- * (/api/hub/duelos); este controlador sólo expone el historial para la interfaz.
- */
 @RestController
 @RequestMapping("/api/duelos")
 @Tag(name = "Duelos")

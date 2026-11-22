@@ -8,10 +8,6 @@ import org.springframework.web.client.RestClient;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
-/**
- * Configuración web: CORS para el frontend React (Vite), el cliente HTTP que usa la
- * estrategia de evaluación remota y los metadatos de Swagger/OpenAPI (ADR-04).
- */
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
 

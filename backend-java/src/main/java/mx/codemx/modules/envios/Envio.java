@@ -10,7 +10,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.time.Instant;
 
-/** Entidad de dominio del módulo Envíos. */
 @Entity
 @Table(name = "envios", schema = "envios")
 public class Envio {
