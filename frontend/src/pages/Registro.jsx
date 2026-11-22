@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { registrarUsuario } from '../api/codemx'
+import { guardarSesion } from '../api/sesion'
 
 const BENEFICIOS = [
   { icono: '🎯', texto: '8 retos de programación en español' },
@@ -26,7 +27,7 @@ export default function Registro() {
     try {
       const u = await registrarUsuario(form)
       setUsuario(u)
-      localStorage.setItem('usuarioId', String(u.id))
+      guardarSesion(u)   // inicia sesión y avisa al navbar
     } catch {
       setError('No se pudo crear la cuenta. ¿El correo ya está registrado?')
     } finally {
@@ -118,6 +119,11 @@ export default function Registro() {
             {cargando ? 'Creando cuenta...' : 'Crear cuenta'}
           </button>
         </form>
+
+        <p className="text-gray-500 text-sm text-center mt-5">
+          ¿Ya tienes cuenta?{' '}
+          <Link to="/login" className="text-emerald-400 hover:underline">Iniciar sesión</Link>
+        </p>
       </div>
     </div>
   )

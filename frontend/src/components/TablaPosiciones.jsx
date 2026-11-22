@@ -26,7 +26,7 @@ export default function TablaPosiciones({ entradas }) {
         {top3.map((entrada, i) => (
           <div key={entrada.id} className={`rounded-xl border p-5 text-center ${MEDAL_STYLE[i]}`}>
             <div className="text-3xl mb-2">{MEDALS[i]}</div>
-            <div className="font-mono font-bold text-lg">#{entrada.usuarioId}</div>
+            <div className="font-bold text-lg truncate" title={entrada.nombre}>{entrada.nombre}</div>
             <div className="text-2xl font-bold mt-1">{entrada.puntajeTotal} pts</div>
             <div className="text-xs mt-1 opacity-60">{entrada.retosResueltos} retos resueltos</div>
           </div>
@@ -49,7 +49,7 @@ export default function TablaPosiciones({ entradas }) {
               {resto.map((entrada, i) => (
                 <tr key={entrada.id} className="border-t border-gray-800 bg-gray-900/50 hover:bg-gray-800/40 transition-colors">
                   <td className="px-5 py-3 text-gray-500 font-mono text-xs">{i + 4}</td>
-                  <td className="px-5 py-3 text-gray-300 font-mono">Usuario #{entrada.usuarioId}</td>
+                  <td className="px-5 py-3 text-gray-200">{entrada.nombre}</td>
                   <td className="px-5 py-3 text-right text-gray-500">{entrada.retosResueltos}</td>
                   <td className="px-5 py-3 text-right font-bold text-emerald-400">{entrada.puntajeTotal} pts</td>
                 </tr>
