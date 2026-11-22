@@ -9,7 +9,6 @@ import mx.codemx.modules.cursos.PreguntaExamen;
 import mx.codemx.modules.cursos.PreguntaExamenRepository;
 import mx.codemx.modules.cursos.TipoLeccion;
 import mx.codemx.modules.retos.CasoPrueba;
-import mx.codemx.modules.retos.CasoPruebaRepository;
 import mx.codemx.modules.retos.Dificultad;
 import mx.codemx.modules.retos.Reto;
 import mx.codemx.modules.retos.RetoRepository;
@@ -29,16 +28,14 @@ import org.springframework.transaction.annotation.Transactional;
 public class DataSeeder implements CommandLineRunner {
 
     private final RetoRepository retos;
-    private final CasoPruebaRepository casos;
     private final ModuloRepository modulos;
     private final LeccionRepository lecciones;
     private final PreguntaExamenRepository preguntas;
     private final JdbcTemplate jdbc;
 
-    public DataSeeder(RetoRepository retos, CasoPruebaRepository casos, ModuloRepository modulos,
+    public DataSeeder(RetoRepository retos, ModuloRepository modulos,
                       LeccionRepository lecciones, PreguntaExamenRepository preguntas, JdbcTemplate jdbc) {
         this.retos = retos;
-        this.casos = casos;
         this.modulos = modulos;
         this.lecciones = lecciones;
         this.preguntas = preguntas;
@@ -133,13 +130,11 @@ public class DataSeeder implements CommandLineRunner {
         reto.setTitulo(titulo);
         reto.setDescripcion(descripcion);
         reto.setDificultad(dificultad);
-        reto = retos.save(reto);
 
-        CasoPrueba caso = new CasoPrueba();
-        caso.setRetoId(reto.getId());
-        caso.setInputData(input);
-        caso.setOutputEsperado(output);
-        casos.save(caso);
+        // La relación uno a muchos se encarga del resto: al guardar el reto, la cascada
+        // persiste sus casos con la clave foránea ya puesta.
+        reto.agregarCaso(new CasoPrueba(input, output));
+        retos.save(reto);
     }
 
     // ============================================================
