@@ -99,9 +99,10 @@ public class CursoService implements CursosApi {
         Leccion l = lecciones.findById(leccionId)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Lección no encontrada"));
 
-        String tituloModulo = modulos.findById(l.getModuloId()).map(Modulo::getTitulo).orElse("");
+        // La relación evita la consulta extra: el módulo se navega desde la propia lección.
+        Modulo m = l.getModulo();
 
-        return new LeccionDetalle(l.getId(), l.getModuloId(), tituloModulo, l.getTitulo(), l.getTipo(),
+        return new LeccionDetalle(l.getId(), m.getId(), m.getTitulo(), l.getTitulo(), l.getTipo(),
                 l.getContenido(), l.getEjemploCodigo(), l.getRetoId(), estaCompletada(l, usuarioId));
     }
 
@@ -116,7 +117,7 @@ public class CursoService implements CursosApi {
         }
 
         if (!progreso.existsByUsuarioIdAndLeccionId(usuarioId, leccionId)) {
-            progreso.save(new ProgresoLeccion(usuarioId, leccionId));
+            progreso.save(new ProgresoLeccion(usuarioId, l));
         }
     }
 
