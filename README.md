@@ -5,6 +5,16 @@ estudiantes universitarios mexicanos (estilo SoloLearn). Permite resolver retos,
 evaluar el código contra casos de prueba, seguir cursos con lecciones y exámenes,
 y competir en un ranking.
 
+## Aplicación móvil Flutter · Hito 1
+
+CodeMx tiene una entrada móvil con el osito Rive y Firebase en el proyecto
+`../FRONTEND-CELLPHONE/mobile/login_rive_animation`. Después del login, la app
+consume esta API y muestra los retos, cursos y ranking de CodeMx. La integración
+usa `POST /auth/firebase` para obtener una sesión verificada del backend.
+
+Abre `CodeMx-mobile.code-workspace` para trabajar con ambos proyectos. Consulta
+[la configuración, las pruebas y el alcance de Hito 1](docs/HITO-1-MOVIL.md).
+
 ## Stack
 
 | Capa | Tecnología |

@@ -1,2 +1,17 @@
 .idea/
 *.iml
+**/application-dev.properties
+**/application-dev.yml
+**/firebase_options.dart
+**/google-services.json
+**/GoogleService-Info.plist
+**/*service-account*.json
+**/.env
+
+# Resultados de compilación y pruebas de .NET
+**/bin/
+**/obj/
+**/TestResults/
+
+# Archivos temporales de diagnóstico de la JVM
+.attach_pid*
